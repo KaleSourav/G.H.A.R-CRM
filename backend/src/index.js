@@ -16,20 +16,29 @@ const { startSLATimer } = require('./services/slaTimer');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ── Security middleware ────────────────────────────────────────────────────
+// ── Security middleware ──────────────────────────────────────────────────
 app.use(helmet());
-const allowedOrigins = process.env.FRONTEND_URL
+
+// ── CORS ──────────────────────────────────────────────────────────────────
+// Allow: localhost dev, all Vercel preview/prod URLs, explicit FRONTEND_URL list
+const explicitOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
-  : ['http://localhost:5173'];
+  : [];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, postman)
+    // Allow server-to-server / curl (no origin header)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    // Always allow localhost
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
       return callback(null, true);
     }
-    return callback(new Error(`Origin ${origin} not allowed by CORS`), false);
+    // Always allow any Vercel deployment (preview + production)
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    // Allow any explicitly listed origin
+    if (explicitOrigins.includes(origin)) return callback(null, true);
+    // Reject everything else — use null (not Error) to avoid 500
+    return callback(null, false);
   },
   credentials: true,
 }));
