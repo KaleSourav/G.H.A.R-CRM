@@ -402,10 +402,14 @@ const capturePublicLead = async (req, res) => {
     if (error) throw error;
 
     // System activity log
-    await supabaseAdmin.from('lead_activities').insert({
-      lead_id: lead.id, user_id: null, org_id: org.id,
-      type: 'note', content: `Lead submitted via website form`,
-    }).catch(() => {}); // non-fatal if this fails
+    try {
+      await supabaseAdmin.from('lead_activities').insert({
+        lead_id: lead.id, user_id: null, org_id: org.id,
+        type: 'note', content: `Lead submitted via website form`,
+      });
+    } catch (err) {
+      console.warn('[Public Capture] Non-fatal error logging activity:', err.message);
+    }
 
     // Auto-assign
     const systemUserId = (await supabaseAdmin.from('users').select('id').eq('org_id', org.id).eq('role', 'admin').limit(1).single()).data?.id;
