@@ -11,7 +11,7 @@ router.get('/', requireRole(['admin', 'manager']), async (req, res) => {
   try {
     let q = supabaseAdmin
       .from('users')
-      .select('id, name, email, phone, role, status, avatar_url, current_lead_count, last_assigned_at, manager:users!users_manager_id_fkey(id, name)')
+      .select('id, name, email, phone, role, status, avatar_url, current_lead_count, last_assigned_at, manager_id')
       .eq('org_id', req.orgId)
       .order('role').order('name');
 

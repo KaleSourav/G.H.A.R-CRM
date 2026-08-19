@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 
     let q = supabaseAdmin
       .from('tasks')
-      .select(`*, lead:leads(id, name, phone, stage), assignee:users(id, name, avatar_url)`, { count: 'exact' })
+      .select(`*, lead:leads(id, name, phone, stage), assignee:users!tasks_user_id_fkey(id, name, avatar_url)`, { count: 'exact' })
       .eq('org_id', orgId);
 
     if (userRole === 'executive') q = q.eq('user_id', user.id);
