@@ -211,7 +211,7 @@ export default function LeadsPage() {
       </div>
 
       {/* ── Quick Summary Stat Pills ────────────────────────────────────── */}
-      <div style={{
+      <div className="leads-stat-grid" style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem',
       }}>
         <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -257,7 +257,7 @@ export default function LeadsPage() {
 
       {/* ── Search & Preset Filter Pills ────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="leads-search-row" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: 260, maxWidth: 440 }}>
             <Search size={15} strokeWidth={1.75} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
@@ -270,7 +270,7 @@ export default function LeadsPage() {
           </div>
 
           {/* Quick preset filters with professional vector icons */}
-          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+          <div className="filter-presets-scroll" style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.2rem', WebkitOverflowScrolling: 'touch' }}>
             {[
               { key: 'all', label: 'All Leads', icon: Users },
               { key: 'hot', label: 'Hot', icon: Flame, color: 'var(--color-danger)' },
@@ -488,35 +488,20 @@ export default function LeadsPage() {
                       <div style={{ fontSize: '0.68rem' }}>{formatRelative(lead.last_activity_at)}</div>
                     </td>
                     <td onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <a
-                          href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn btn-ghost btn-sm btn-icon"
-                          title={`Chat directly with ${lead.name} on WhatsApp`}
-                          style={{
-                            color: '#25D366',
-                            background: 'rgba(37, 211, 102, 0.1)',
-                            border: '1px solid rgba(37, 211, 102, 0.3)',
-                            borderRadius: 'var(--radius-full)',
-                          }}
-                        >
-                          <WhatsAppIcon size={14} />
-                        </a>
+                      <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button
                           onClick={() => { setEditLead(lead); setShowLeadForm(true); }}
                           className="btn btn-ghost btn-sm btn-icon"
                           title="Edit Lead"
                         >
-                          <Pencil size={13} strokeWidth={1.75} />
+                          <Pencil size={14} strokeWidth={1.75} />
                         </button>
                         <button
                           onClick={() => navigate(`/leads/${lead.id}`)}
                           className="btn btn-ghost btn-sm btn-icon"
                           title="View Details"
                         >
-                          <ChevronRight size={14} strokeWidth={2} />
+                          <ChevronRight size={15} strokeWidth={2} />
                         </button>
                       </div>
                     </td>
