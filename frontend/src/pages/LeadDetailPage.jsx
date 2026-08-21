@@ -239,7 +239,7 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem' }}>
+      <div className="lead-detail-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem' }}>
         {/* Left: Activity + Tabs */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Log activity */}

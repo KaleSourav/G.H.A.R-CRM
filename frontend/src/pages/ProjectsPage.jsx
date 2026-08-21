@@ -103,7 +103,7 @@ export default function ProjectsPage() {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
+        <div className="projects-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
           {projects.map(proj => {
             const soldPct = proj.total_units ? Math.round(((proj.total_units - proj.available_units) / proj.total_units) * 100) : 0;
             return (
