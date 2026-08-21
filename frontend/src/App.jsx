@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Layouts & Pages
 import Layout from './components/layout/Layout';
@@ -95,30 +96,32 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'var(--color-surface-2)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--color-border)',
-              borderRadius: '10px',
-              fontSize: '0.875rem',
-              fontFamily: 'Inter, sans-serif',
-            },
-            success: {
-              iconTheme: { primary: '#10B981', secondary: 'var(--color-surface-2)' },
-            },
-            error: {
-              iconTheme: { primary: '#EF4444', secondary: 'var(--color-surface-2)' },
-            },
-          }}
-        />
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'var(--color-surface-2)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '10px',
+                fontSize: '0.875rem',
+                fontFamily: 'Inter, sans-serif',
+              },
+              success: {
+                iconTheme: { primary: '#10B981', secondary: 'var(--color-surface-2)' },
+              },
+              error: {
+                iconTheme: { primary: '#EF4444', secondary: 'var(--color-surface-2)' },
+              },
+            }}
+          />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

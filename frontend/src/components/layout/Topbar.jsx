@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   Menu, Bell, Plus, User, AlertTriangle,
   Clock, CheckCircle, RotateCcw, Download, Info,
+  Sun, Moon,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { authAPI } from '../../services/api';
 import { formatRelative } from '../../utils/helpers';
 
@@ -30,6 +32,7 @@ const NOTIF_COLORS = {
 
 export default function Topbar({ onMenuClick }) {
   const { user } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
@@ -114,6 +117,21 @@ export default function Topbar({ onMenuClick }) {
         >
           <Plus size={14} strokeWidth={2.5} />
           <span className="topbar-add-label">Add Lead</span>
+        </button>
+
+        {/* Theme Toggle (Dark / Light) */}
+        <button
+          onClick={toggleTheme}
+          className="btn btn-ghost btn-icon"
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          id="theme-toggle-btn"
+        >
+          {isDark ? (
+            <Sun size={18} strokeWidth={1.75} />
+          ) : (
+            <Moon size={18} strokeWidth={1.75} />
+          )}
         </button>
 
         {/* Notifications */}

@@ -1,10 +1,10 @@
-import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Kanban, CheckSquare,
   Building2, UserCircle2, Settings, LogOut,
-  Handshake, MessageSquare, Sparkles,
+  Handshake, MessageSquare, Sparkles, Sun, Moon,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getInitials } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
@@ -33,6 +33,7 @@ const COMING_SOON = [
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, signOut } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -178,6 +179,25 @@ export default function Sidebar({ isOpen, onClose }) {
               {user?.role?.replace('_', ' ')}
             </div>
           </div>
+          <button
+            onClick={toggleTheme}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="sidebar-theme-btn"
+            style={{
+              padding: '0.3rem',
+              borderRadius: '6px',
+              background: 'transparent',
+              color: 'var(--text-muted)',
+              border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center',
+              transition: 'color 120ms',
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--color-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+          >
+            {isDark ? <Sun size={15} strokeWidth={1.75} /> : <Moon size={15} strokeWidth={1.75} />}
+          </button>
           <button
             onClick={handleSignOut}
             title="Sign out"
