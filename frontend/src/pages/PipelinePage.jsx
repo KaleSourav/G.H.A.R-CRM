@@ -8,6 +8,7 @@ import { leadsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PIPELINE_STAGES, STAGE_CONFIG, PRIORITY_CONFIG } from '../utils/constants';
 import { formatPhone, formatCurrency, formatRelative, getInitials } from '../utils/helpers';
+import { Phone, IndianRupee, AlertTriangle, Users } from 'lucide-react';
 import LostReasonModal from '../components/pipeline/LostReasonModal';
 import toast from 'react-hot-toast';
 
@@ -116,20 +117,22 @@ function KanbanCard({ lead, onClick }) {
           )}
         </div>
         <span className={`badge ${PRIORITY_CONFIG[lead.priority]?.class}`} style={{ fontSize: '0.55rem', padding: '0.1rem 0.4rem' }}>
-          {PRIORITY_CONFIG[lead.priority]?.emoji}
+          {PRIORITY_CONFIG[lead.priority]?.label?.[0]}
         </span>
       </div>
 
       {/* Contact */}
-      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-        📞 {formatPhone(lead.phone)}
+      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        <Phone size={11} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+        {formatPhone(lead.phone)}
       </div>
 
       {/* Budget */}
       {lead.budget_max && (
-        <div style={{ fontSize: '0.7rem', color: 'var(--color-primary)', marginBottom: '0.5rem' }}>
-          💰 {formatCurrency(lead.budget_max)}
-          {lead.configuration && ` • ${lead.configuration}`}
+        <div style={{ fontSize: '0.7rem', color: 'var(--color-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <IndianRupee size={10} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+          {formatCurrency(lead.budget_max)}
+          {lead.configuration && ` · ${lead.configuration}`}
         </div>
       )}
 
@@ -143,7 +146,7 @@ function KanbanCard({ lead, onClick }) {
           {formatRelative(lead.last_activity_at)}
         </div>
         <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-          {lead.sla_breach && <span title="SLA Breach" style={{ fontSize: '0.7rem' }}>⚠️</span>}
+          {lead.sla_breach && <AlertTriangle size={11} strokeWidth={2} color="var(--color-danger)" title="SLA Breach" />}
           {lead.assignee && (
             <div title={lead.assignee.name} style={{
               width: 20, height: 20, borderRadius: '50%',
@@ -250,12 +253,12 @@ export default function PipelinePage() {
         <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
           <select className="form-select" value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ fontSize: '0.8rem', padding: '0.375rem 2rem 0.375rem 0.75rem', width: 'auto' }}>
             <option value="">All Priority</option>
-            <option value="hot">🔴 Hot</option>
-            <option value="warm">🟡 Warm</option>
-            <option value="cold">🔵 Cold</option>
+            <option value="hot">Hot</option>
+            <option value="warm">Warm</option>
+            <option value="cold">Cold</option>
           </select>
           <button onClick={loadLeads} className="btn btn-secondary btn-sm">↻ Refresh</button>
-          <button onClick={() => navigate('/leads')} className="btn btn-secondary btn-sm">📋 List View</button>
+          <button onClick={() => navigate('/leads')} className="btn btn-secondary btn-sm">List View</button>
         </div>
       </div>
 

@@ -7,7 +7,7 @@ export default function LeadFilters({ filters, onChange, onReset, executives, pr
     <div className="card" style={{ padding: '1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
         <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Filters</span>
-        {isActive && <button onClick={onReset} className="btn btn-ghost btn-sm" style={{ fontSize: '0.75rem', color: 'var(--color-danger)' }}>✕ Clear All</button>}
+        {isActive && <button onClick={onReset} className="btn btn-ghost btn-sm" style={{ fontSize: '0.75rem', color: 'var(--color-danger)' }}>Clear All</button>}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
         <div className="form-group">
@@ -28,9 +28,9 @@ export default function LeadFilters({ filters, onChange, onReset, executives, pr
           <label className="form-label">Priority</label>
           <select className="form-select" value={filters.priority} onChange={e => onChange('priority', e.target.value)}>
             <option value="">All</option>
-            <option value="hot">🔴 Hot</option>
-            <option value="warm">🟡 Warm</option>
-            <option value="cold">🔵 Cold</option>
+            <option value="hot">Hot</option>
+            <option value="warm">Warm</option>
+            <option value="cold">Cold</option>
           </select>
         </div>
         {canFilterByExec && executives.length > 0 && (
@@ -55,8 +55,8 @@ export default function LeadFilters({ filters, onChange, onReset, executives, pr
           <label className="form-label">SLA Status</label>
           <select className="form-select" value={filters.sla_breach} onChange={e => onChange('sla_breach', e.target.value)}>
             <option value="">All</option>
-            <option value="true">⚠️ SLA Breach</option>
-            <option value="false">✅ On Time</option>
+            <option value="true">SLA Breach</option>
+            <option value="false">On Time</option>
           </select>
         </div>
         <div className="form-group">

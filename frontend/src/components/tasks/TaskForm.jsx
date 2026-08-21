@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { tasksAPI } from '../../services/api';
 import { TASK_TYPES } from '../../utils/constants';
+import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function TaskForm({ task, leadId, executives, canAssign, onClose, onSave }) {
@@ -40,7 +41,7 @@ export default function TaskForm({ task, leadId, executives, canAssign, onClose,
       <div className="modal">
         <div className="modal-header">
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{isEdit ? 'Edit Task' : 'Create Task'}</h2>
-          <button onClick={onClose} className="btn btn-ghost btn-icon">✕</button>
+          <button onClick={onClose} className="btn btn-ghost btn-icon"><X size={18} strokeWidth={1.75} /></button>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -78,7 +79,7 @@ export default function TaskForm({ task, leadId, executives, canAssign, onClose,
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
-                  <option value="urgent">🚨 Urgent</option>
+                  <option value="urgent">Urgent</option>
                 </select>
               </div>
             </div>

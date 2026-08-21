@@ -4,6 +4,10 @@ import { leadsAPI, teamAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PIPELINE_STAGES, LEAD_SOURCES, CONFIGURATIONS, PURPOSES, LOST_REASONS, PRIORITY_CONFIG, STAGE_CONFIG } from '../utils/constants';
 import { formatDate, formatPhone, formatCurrency, formatRelative, getInitials, downloadCSV } from '../utils/helpers';
+import {
+  Download, Upload, SlidersHorizontal, Search, Pencil,
+  Plus, Users, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown,
+} from 'lucide-react';
 import LeadForm from '../components/leads/LeadForm';
 import LeadFilters from '../components/leads/LeadFilters';
 import CSVImportModal from '../components/common/CSVImportModal';
@@ -118,8 +122,10 @@ export default function LeadsPage() {
   };
 
   const SortIcon = ({ col }) => {
-    if (sortBy !== col) return <span style={{ opacity: 0.3 }}>↕</span>;
-    return <span style={{ color: 'var(--color-primary)' }}>{sortDir === 'asc' ? '↑' : '↓'}</span>;
+    if (sortBy !== col) return <ArrowUpDown size={12} style={{ opacity: 0.3, display: 'inline' }} />;
+    return sortDir === 'asc'
+      ? <ArrowUp size={12} style={{ color: 'var(--color-primary)', display: 'inline' }} />
+      : <ArrowDown size={12} style={{ color: 'var(--color-primary)', display: 'inline' }} />;
   };
 
   return (
@@ -133,17 +139,25 @@ export default function LeadsPage() {
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {canManageTeam && (
             <button onClick={() => setShowCSVImport(true)} className="btn btn-secondary btn-sm">
-              📥 Import CSV
+              <Download size={13} strokeWidth={2} /> Import
             </button>
           )}
           <button onClick={handleExport} className="btn btn-secondary btn-sm">
-            📤 Export
+            <Upload size={13} strokeWidth={2} /> Export
           </button>
-          <button onClick={() => setShowFilters(!showFilters)} className="btn btn-secondary btn-sm">
-            🔍 Filter {Object.values(filters).some(v => v) && '●'}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="btn btn-secondary btn-sm"
+            style={Object.values(filters).some(v => v) ? { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' } : {}}
+          >
+            <SlidersHorizontal size={13} strokeWidth={2} />
+            Filters
+            {Object.values(filters).some(v => v) && (
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--color-primary)', display: 'inline-block' }} />
+            )}
           </button>
           <button onClick={() => { setEditLead(null); setShowLeadForm(true); }} className="btn btn-primary btn-sm">
-            + Add Lead
+            <Plus size={13} strokeWidth={2.5} /> Add Lead
           </button>
         </div>
       </div>
@@ -151,7 +165,7 @@ export default function LeadsPage() {
       {/* Search */}
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, maxWidth: 400 }}>
-          <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
+          <Search size={15} strokeWidth={1.75} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             className="form-input"
             placeholder="Search by name, phone, or email..."
@@ -220,7 +234,7 @@ export default function LeadsPage() {
             ) : leads.length === 0 ? (
               <tr><td colSpan={10}>
                 <div className="empty-state">
-                  <span className="empty-state-icon">👥</span>
+                  <div className="empty-state-icon"><Users size={22} strokeWidth={1.5} /></div>
                   <div>
                     <p style={{ fontWeight: 600 }}>No leads found</p>
                     <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
@@ -257,7 +271,7 @@ export default function LeadsPage() {
                         <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                           {lead.name}
                           {lead.is_duplicate && <span className="badge badge-danger" style={{ marginLeft: '0.5rem', fontSize: '0.6rem' }}>DUP</span>}
-                          {lead.sla_breach && <span style={{ marginLeft: '0.5rem' }} title="SLA Breach">⚠️</span>}
+                          {lead.sla_breach && <AlertTriangle size={12} strokeWidth={2} color="var(--color-danger)" style={{ marginLeft: '0.4rem', display: 'inline', verticalAlign: 'middle' }} title="SLA Breach" />}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.source}</div>
                       </div>
@@ -279,7 +293,7 @@ export default function LeadsPage() {
                   </td>
                   <td data-label="Priority">
                     <span className={`badge ${PRIORITY_CONFIG[lead.priority]?.class}`}>
-                      {PRIORITY_CONFIG[lead.priority]?.emoji} {PRIORITY_CONFIG[lead.priority]?.label}
+                      {PRIORITY_CONFIG[lead.priority]?.label}
                     </span>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Score: {lead.lead_score}</div>
                   </td>
@@ -316,7 +330,7 @@ export default function LeadsPage() {
                         onClick={() => { setEditLead(lead); setShowLeadForm(true); }}
                         className="btn btn-ghost btn-sm btn-icon"
                         title="Edit"
-                      >✏️</button>
+                      ><Pencil size={13} strokeWidth={1.75} /></button>
                     </div>
                   </td>
                 </tr>

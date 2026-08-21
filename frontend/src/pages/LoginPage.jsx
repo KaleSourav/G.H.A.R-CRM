@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -117,13 +118,14 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
-                  position: 'absolute', right: '0.75rem', top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--text-muted)', fontSize: '0.85rem',
-                }}
-              >
-                {showPassword ? '🙈' : '👁️'}
+                position: 'absolute', right: '0.75rem', top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text-muted)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {showPassword ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
               </button>
             </div>
           </div>
@@ -137,7 +139,7 @@ export default function LoginPage() {
             {loading ? (
               <><span className="spinner" style={{ width: 16, height: 16 }} /> Signing in...</>
             ) : (
-              'Sign In →'
+              <><span>Sign In</span><ArrowRight size={16} strokeWidth={1.75} /></>
             )}
           </button>
         </form>

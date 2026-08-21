@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { projectsAPI } from '../../services/api';
 import { formatCurrency } from '../../utils/helpers';
+import { LayoutGrid, List, Building } from 'lucide-react';
 import UnitForm from './UnitForm';
 
 const STATUS_CONFIG = {
@@ -17,7 +18,7 @@ export default function UnitGrid({ units, projectId, onUnitUpdated }) {
   if (units.length === 0) {
     return (
       <div className="empty-state">
-        <span className="empty-state-icon">🏢</span>
+        <div className="empty-state-icon"><Building size={22} strokeWidth={1.5} /></div>
         <p style={{ fontWeight: 600 }}>No units found</p>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Add units to manage inventory</p>
       </div>
@@ -27,8 +28,12 @@ export default function UnitGrid({ units, projectId, onUnitUpdated }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem', marginBottom: '0.5rem' }}>
-        <button onClick={() => setView('grid')} className={`btn btn-sm ${view === 'grid' ? 'btn-primary' : 'btn-secondary'}`}>⊞ Grid</button>
-        <button onClick={() => setView('table')} className={`btn btn-sm ${view === 'table' ? 'btn-primary' : 'btn-secondary'}`}>☰ Table</button>
+        <button onClick={() => setView('grid')} className={`btn btn-sm ${view === 'grid' ? 'btn-primary' : 'btn-secondary'}`}>
+          <LayoutGrid size={13} strokeWidth={1.75} /> Grid
+        </button>
+        <button onClick={() => setView('table')} className={`btn btn-sm ${view === 'table' ? 'btn-primary' : 'btn-secondary'}`}>
+          <List size={13} strokeWidth={1.75} /> Table
+        </button>
       </div>
 
       {view === 'grid' ? (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LOST_REASONS } from '../../utils/constants';
+import { XCircle } from 'lucide-react';
 
 export default function LostReasonModal({ onConfirm, onCancel }) {
   const [reason, setReason] = useState('');
@@ -16,8 +17,8 @@ export default function LostReasonModal({ onConfirm, onCancel }) {
       <div className="modal" style={{ maxWidth: 420 }}>
         <div className="modal-header">
           <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-danger)' }}>
-              🚫 Mark as Lost
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <XCircle size={18} strokeWidth={1.75} /> Mark as Lost
             </h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
               Select a reason to move this lead to Lost

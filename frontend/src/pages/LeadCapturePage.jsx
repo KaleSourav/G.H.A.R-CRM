@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ORG_SLUG, CONFIGURATIONS, LEAD_SOURCES } from '../utils/constants';
+import { CheckCircle, ArrowRight } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
@@ -44,7 +45,17 @@ export default function LeadCapturePage() {
           border: '1px solid var(--color-border)',
           animation: 'slideUp 0.4s ease',
         }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏠</div>
+          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+            <div style={{
+              width: 56, height: 56,
+              background: 'rgba(34,197,94,0.12)',
+              border: '1px solid rgba(34,197,94,0.25)',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <CheckCircle size={28} strokeWidth={1.75} color="var(--color-success)" />
+            </div>
+          </div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
             Thank You!
           </h1>
@@ -53,10 +64,11 @@ export default function LeadCapturePage() {
           </p>
           <div style={{
             marginTop: '1.5rem', padding: '0.875rem',
-            background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)',
-            borderRadius: '10px', fontSize: '0.8rem', color: 'var(--color-success)',
+            background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+            borderRadius: 'var(--radius)', fontSize: '0.8rem', color: 'var(--color-success)',
+            display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center',
           }}>
-            ✅ Your enquiry is confirmed
+            <CheckCircle size={14} strokeWidth={2} /> Your enquiry is confirmed
           </div>
         </div>
       </div>
@@ -185,7 +197,7 @@ export default function LeadCapturePage() {
             disabled={submitting}
             style={{ justifyContent: 'center', padding: '0.875rem', marginTop: '0.25rem', fontSize: '0.95rem' }}
           >
-            {submitting ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Submitting...</> : 'Submit Enquiry →'}
+            {submitting ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Submitting...</> : <><span>Submit Enquiry</span><ArrowRight size={15} strokeWidth={1.75} /></>}
           </button>
 
           <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5 }}>

@@ -49,7 +49,7 @@ export default function UnitForm({ unit, projectId, onClose, onSave }) {
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
             {isEdit ? `Edit Unit ${unit.unit_number}` : 'Add Unit'}
           </h2>
-          <button onClick={onClose} className="btn btn-ghost btn-icon">✕</button>
+          <button onClick={onClose} className="btn btn-ghost btn-icon"><svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg></button>
         </div>
 
         <form onSubmit={handleSubmit}>

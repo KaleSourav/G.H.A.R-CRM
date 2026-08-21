@@ -1,55 +1,52 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard, Users, Kanban, CheckSquare,
+  Building2, UserCircle2, Settings, LogOut,
+  Handshake, MessageSquare, Sparkles,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getInitials } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
-  {
-    icon: '📊', label: 'Dashboard', path: '/dashboard',
-    roles: ['admin', 'manager', 'executive', 'front_office', 'finance'],
-  },
-  {
-    icon: '👥', label: 'Leads', path: '/leads',
-    roles: ['admin', 'manager', 'executive', 'front_office'],
-  },
-  {
-    icon: '🗂️', label: 'Pipeline', path: '/pipeline',
-    roles: ['admin', 'manager', 'executive'],
-  },
-  {
-    icon: '✅', label: 'Tasks', path: '/tasks',
-    roles: ['admin', 'manager', 'executive'],
-  },
-  {
-    icon: '🏗️', label: 'Projects', path: '/projects',
-    roles: ['admin', 'manager'],
-  },
-  {
-    icon: '👤', label: 'Team', path: '/team',
-    roles: ['admin', 'manager'],
-  },
-  {
-    icon: '⚙️', label: 'Settings', path: '/settings',
-    roles: ['admin'],
-  },
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard',
+    roles: ['admin', 'manager', 'executive', 'front_office', 'finance'] },
+  { icon: Users,           label: 'Leads',     path: '/leads',
+    roles: ['admin', 'manager', 'executive', 'front_office'] },
+  { icon: Kanban,          label: 'Pipeline',  path: '/pipeline',
+    roles: ['admin', 'manager', 'executive'] },
+  { icon: CheckSquare,     label: 'Tasks',     path: '/tasks',
+    roles: ['admin', 'manager', 'executive'] },
+  { icon: Building2,       label: 'Projects',  path: '/projects',
+    roles: ['admin', 'manager'] },
+  { icon: UserCircle2,     label: 'Team',      path: '/team',
+    roles: ['admin', 'manager'] },
+  { icon: Settings,        label: 'Settings',  path: '/settings',
+    roles: ['admin'] },
+];
+
+const COMING_SOON = [
+  { icon: Handshake,      label: 'Channel Partners' },
+  { icon: MessageSquare,  label: 'WhatsApp' },
+  { icon: Sparkles,       label: 'AI Insights' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success('Signed out');
+    toast.success('Signed out successfully');
     navigate('/login');
   };
 
-  const filteredNav = NAV_ITEMS.filter(item =>
-    !user?.role || item.roles.includes(user.role)
+  const filteredNav = NAV_ITEMS.filter(
+    item => !user?.role || item.roles.includes(user.role)
   );
 
   return (
-    <aside style={{
+    <aside className="sidebar-container" style={{
       position: 'fixed',
       left: 0, top: 0, bottom: 0,
       width: 'var(--sidebar-width)',
@@ -58,96 +55,87 @@ export default function Sidebar({ isOpen, onClose }) {
       display: 'flex',
       flexDirection: 'column',
       zIndex: 200,
-      transition: 'transform 250ms ease',
-      transform: isOpen ? 'translateX(0)' : undefined,
+      transition: 'transform 220ms ease, width 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms ease',
+      overflowX: 'hidden',
     }}>
+
       {/* Logo */}
       <div style={{
-        padding: '1.25rem 1.5rem',
+        padding: '1.125rem 1.25rem',
         borderBottom: '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem',
+        flexShrink: 0,
       }}>
         <div style={{
-          width: 36, height: 36,
-          background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-          borderRadius: '10px',
+          width: 34, height: 34,
+          background: 'linear-gradient(135deg, #E8A020, #C8891A)',
+          borderRadius: '9px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '1.1rem',
+          fontSize: '0.95rem',
           fontWeight: '800',
-          color: '#0F172A',
+          color: '#080E1A',
           flexShrink: 0,
-          boxShadow: '0 0 16px rgba(245,158,11,0.3)',
+          boxShadow: '0 0 12px rgba(232,160,32,0.25)',
+          letterSpacing: '-0.02em',
         }}>G</div>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.2 }}>
+        <div className="sidebar-brand-text" style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
             G.H.A.R CRM
           </div>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '0.1rem' }}>
             Real Estate Suite
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '0.75rem 0.75rem', overflowY: 'auto' }}>
-        <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          {filteredNav.map(item => (
-            <li key={item.path}>
+      <nav style={{ flex: 1, padding: '0.625rem', overflowY: 'auto' }}>
+        <div className="sidebar-section-title" style={{ marginBottom: '0.25rem', padding: '0 0.25rem 0.5rem', fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+          Navigation
+        </div>
+        <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
+          {filteredNav.map(({ icon: Icon, label, path }) => (
+            <li key={path}>
               <NavLink
-                to={item.path}
+                to={path}
                 onClick={onClose}
-                style={({ isActive }) => ({
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.6rem 0.875rem',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)',
-                  background: isActive ? 'rgba(245,158,11,0.08)' : 'transparent',
-                  border: isActive ? '1px solid rgba(245,158,11,0.15)' : '1px solid transparent',
-                  transition: 'all 150ms ease',
-                  textDecoration: 'none',
-                })}
-                className="nav-link"
+                title={label}
+                className={({ isActive }) =>
+                  `sidebar-nav-link${isActive ? ' active' : ''}`
+                }
               >
-                <span style={{ fontSize: '1rem', lineHeight: 1 }}>{item.icon}</span>
-                <span>{item.label}</span>
+                <Icon size={16} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                <span className="sidebar-nav-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
               </NavLink>
             </li>
           ))}
         </ul>
 
-        {/* Phase 2 — coming soon section */}
-        <div style={{ marginTop: '1.5rem', padding: '0 0.125rem' }}>
-          <div style={{
-            fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)',
+        {/* Coming Soon */}
+        <div className="sidebar-coming-soon" style={{ marginTop: '1.25rem' }}>
+          <div className="sidebar-section-title" style={{
+            fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)',
             textTransform: 'uppercase', letterSpacing: '0.08em',
-            padding: '0 0.75rem', marginBottom: '0.5rem',
+            padding: '0 0.25rem', marginBottom: '0.375rem', whiteSpace: 'nowrap',
           }}>Coming Soon</div>
-          {[
-            { icon: '🤝', label: 'Channel Partners' },
-            { icon: '💬', label: 'WhatsApp' },
-            { icon: '🤖', label: 'AI Insights' },
-          ].map(item => (
-            <div key={item.label} style={{
+          {COMING_SOON.map(({ icon: Icon, label }) => (
+            <div key={label} title={label} style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem',
-              padding: '0.55rem 0.875rem',
-              borderRadius: '8px',
-              fontSize: '0.8rem',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius)',
+              fontSize: '0.825rem',
               color: 'var(--text-muted)',
               opacity: 0.5,
               cursor: 'not-allowed',
             }}>
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-              <span style={{
-                marginLeft: 'auto', fontSize: '0.6rem', fontWeight: 600,
+              <Icon size={15} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              <span className="sidebar-nav-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
+              <span className="sidebar-p2-badge" style={{
+                marginLeft: 'auto', fontSize: '0.58rem', fontWeight: 600,
                 background: 'var(--color-surface-2)',
                 padding: '0.1rem 0.4rem', borderRadius: '4px',
                 color: 'var(--text-muted)',
@@ -159,61 +147,89 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* User Profile */}
       <div style={{
-        padding: '1rem',
+        padding: '0.875rem',
         borderTop: '1px solid var(--color-border)',
+        flexShrink: 0,
       }}>
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.75rem',
-          padding: '0.625rem 0.75rem',
-          borderRadius: '10px',
+          display: 'flex', alignItems: 'center', gap: '0.625rem',
+          padding: '0.5rem 0.625rem',
+          borderRadius: 'var(--radius)',
           background: 'var(--color-surface-2)',
           border: '1px solid var(--color-border)',
+          overflow: 'hidden',
         }}>
           {/* Avatar */}
           <div style={{
-            width: 32, height: 32,
-            background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+            width: 30, height: 30,
+            background: 'linear-gradient(135deg, #4F6FE8, #7C3AED)',
             borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.75rem', fontWeight: 700, color: 'white',
+            fontSize: '0.7rem', fontWeight: 700, color: 'white',
             flexShrink: 0,
           }}>
             {getInitials(user?.name)}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div className="sidebar-user-text" style={{ flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user?.name || 'Loading...'}
             </div>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
               {user?.role?.replace('_', ' ')}
             </div>
           </div>
           <button
             onClick={handleSignOut}
             title="Sign out"
+            className="sidebar-logout-btn"
             style={{
-              padding: '0.25rem',
+              padding: '0.3rem',
               borderRadius: '6px',
               background: 'transparent',
               color: 'var(--text-muted)',
               border: 'none', cursor: 'pointer',
-              fontSize: '0.9rem',
-              transition: 'color 150ms',
+              display: 'flex', alignItems: 'center',
+              transition: 'color 120ms',
+              flexShrink: 0,
             }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
           >
-            🚪
+            <LogOut size={15} strokeWidth={1.75} />
           </button>
         </div>
       </div>
 
       <style>{`
-        .nav-link:hover:not([aria-current="page"]) {
-          background: var(--color-surface-2) !important;
-          color: var(--text-primary) !important;
-        }
         @media (max-width: 768px) {
-          aside { transform: translateX(-100%); }
-          aside[style*="translateX(0)"] { transform: translateX(0) !important; }
+          aside.sidebar-container {
+            transform: ${isOpen ? 'translateX(0)' : 'translateX(-100%)'};
+            width: 240px !important;
+            box-shadow: var(--shadow-xl);
+          }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+          aside.sidebar-container {
+            width: 64px !important;
+            overflow-x: hidden !important;
+            z-index: 250 !important;
+          }
+          aside.sidebar-container:hover {
+            width: 220px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+          }
+          aside.sidebar-container:not(:hover) .sidebar-brand-text,
+          aside.sidebar-container:not(:hover) .sidebar-nav-label,
+          aside.sidebar-container:not(:hover) .sidebar-section-title,
+          aside.sidebar-container:not(:hover) .sidebar-user-text,
+          aside.sidebar-container:not(:hover) .sidebar-p2-badge,
+          aside.sidebar-container:not(:hover) .sidebar-logout-btn {
+            display: none !important;
+          }
+          aside.sidebar-container:not(:hover) .sidebar-nav-link {
+            justify-content: center !important;
+            padding: 0.6rem 0 !important;
+          }
         }
       `}</style>
     </aside>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { leadsAPI } from '../../services/api';
+import { X, CheckCircle, AlertTriangle, FileText, Download, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const EXPECTED_COLUMNS = ['name', 'phone', 'email', 'source', 'project', 'budget_min', 'budget_max', 'configuration', 'notes'];
@@ -48,14 +49,17 @@ export default function CSVImportModal({ onClose, onImported }) {
       <div className="modal">
         <div className="modal-header">
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Import Leads via CSV</h2>
-          <button onClick={onClose} className="btn btn-ghost btn-icon">✕</button>
+          <button onClick={onClose} className="btn btn-ghost btn-icon"><X size={18} strokeWidth={1.75} /></button>
         </div>
 
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {result ? (
             <div style={{ textAlign: 'center', padding: '1rem' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>
-                {result.failed === 0 ? '✅' : '⚠️'}
+              <div style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'center' }}>
+                {result.failed === 0
+                  ? <CheckCircle size={36} strokeWidth={1.5} color="var(--color-success)" />
+                  : <AlertTriangle size={36} strokeWidth={1.5} color="var(--color-warning)" />
+                }
               </div>
               <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Import Complete</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
@@ -83,10 +87,12 @@ export default function CSVImportModal({ onClose, onImported }) {
             <>
               {/* Instructions */}
               <div style={{ padding: '0.75rem', background: 'var(--color-info-dim)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                <p style={{ fontWeight: 600, marginBottom: '0.25rem', color: 'var(--text-primary)' }}>📋 Column mapping (flexible)</p>
+                <p style={{ fontWeight: 600, marginBottom: '0.25rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                  <FileText size={13} strokeWidth={1.75} /> Column mapping (flexible)
+                </p>
                 <p>Our importer detects common column names automatically. Required: <strong>name</strong>, <strong>phone</strong>. Download the template for the exact format.</p>
                 <button onClick={downloadTemplate} className="btn btn-secondary btn-sm" style={{ marginTop: '0.5rem', fontSize: '0.75rem' }}>
-                  📥 Download Template
+                  <Download size={12} strokeWidth={1.75} /> Download Template
                 </button>
               </div>
 
@@ -113,8 +119,11 @@ export default function CSVImportModal({ onClose, onImported }) {
                   onChange={e => setFile(e.target.files[0])}
                   style={{ display: 'none' }}
                 />
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-                  {file ? '✅' : '📂'}
+                <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+                  {file
+                    ? <CheckCircle size={28} strokeWidth={1.5} color="var(--color-success)" />
+                    : <Upload size={28} strokeWidth={1.25} color="var(--text-muted)" />
+                  }
                 </div>
                 {file ? (
                   <div>

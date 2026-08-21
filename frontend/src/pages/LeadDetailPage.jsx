@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft, Pencil, Plus, Phone, Mail, Tag, Building2,
+  Ruler, IndianRupee, AlertTriangle, FileText, MessageSquare, MapPin,
+  CheckCircle, Clock,
+} from 'lucide-react';
 import { leadsAPI, tasksAPI, teamAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PIPELINE_STAGES, ACTIVITY_TYPE_CONFIG, STAGE_CONFIG, PRIORITY_CONFIG, LOST_REASONS } from '../utils/constants';
@@ -121,18 +126,21 @@ export default function LeadDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{lead.name}</h1>
               <span className={`badge ${PRIORITY_CONFIG[lead.priority]?.class}`}>
-                {PRIORITY_CONFIG[lead.priority]?.emoji} {PRIORITY_CONFIG[lead.priority]?.label}
+                {PRIORITY_CONFIG[lead.priority]?.label}
               </span>
               {lead.is_duplicate && <span className="badge badge-danger">Duplicate</span>}
-              {lead.sla_breach && <span className="badge badge-danger">⚠️ SLA Breach</span>}
+              {lead.sla_breach && <span className="badge badge-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><AlertTriangle size={10} strokeWidth={2} /> SLA Breach</span>}
             </div>
             <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', flexWrap: 'wrap', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              <span>📞 <a href={`tel:${lead.phone}`} style={{ color: 'var(--color-info)' }}>{formatPhone(lead.phone)}</a></span>
-              {lead.email && <span>📧 {lead.email}</span>}
-              <span>🏷️ {lead.source}{lead.sub_source && ` • ${lead.sub_source}`}</span>
-              {lead.project && <span>🏗️ {lead.project.name}</span>}
-              {lead.configuration && <span>📐 {lead.configuration}</span>}
-              {lead.budget_max && <span>💰 upto {formatCurrency(lead.budget_max)}</span>}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <Phone size={12} strokeWidth={1.75} />
+                <a href={`tel:${lead.phone}`} style={{ color: 'var(--color-info)' }}>{formatPhone(lead.phone)}</a>
+              </span>
+              {lead.email && <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Mail size={12} strokeWidth={1.75} />{lead.email}</span>}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Tag size={12} strokeWidth={1.75} />{lead.source}{lead.sub_source && ` · ${lead.sub_source}`}</span>
+              {lead.project && <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Building2 size={12} strokeWidth={1.75} />{lead.project.name}</span>}
+              {lead.configuration && <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Ruler size={12} strokeWidth={1.75} />{lead.configuration}</span>}
+              {lead.budget_max && <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><IndianRupee size={12} strokeWidth={1.75} />upto {formatCurrency(lead.budget_max)}</span>}
             </div>
             <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Lead Score: <strong style={{ color: 'var(--color-primary)' }}>{lead.lead_score}/100</strong>
@@ -143,8 +151,12 @@ export default function LeadDetailPage() {
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-            <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary btn-sm">+ Task</button>
-            <button onClick={() => setShowEditForm(true)} className="btn btn-secondary btn-sm">✏️ Edit</button>
+            <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary btn-sm">
+              <Plus size={13} strokeWidth={2.5} /> Task
+            </button>
+            <button onClick={() => setShowEditForm(true)} className="btn btn-secondary btn-sm">
+              <Pencil size={13} strokeWidth={1.75} /> Edit
+            </button>
           </div>
         </div>
 
@@ -198,11 +210,11 @@ export default function LeadDetailPage() {
             <form onSubmit={handleAddNote} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {[
-                  { value: 'note', label: '📝 Note' },
-                  { value: 'call', label: '📞 Call' },
-                  { value: 'email', label: '📧 Email' },
-                  { value: 'whatsapp', label: '💬 WhatsApp' },
-                  { value: 'site_visit_scheduled', label: '🏗️ Site Visit' },
+                  { value: 'note',               label: 'Note' },
+                  { value: 'call',               label: 'Call' },
+                  { value: 'email',              label: 'Email' },
+                  { value: 'whatsapp',           label: 'WhatsApp' },
+                  { value: 'site_visit_scheduled', label: 'Site Visit' },
                 ].map(t => (
                   <button
                     key={t.value}
@@ -255,7 +267,9 @@ export default function LeadDetailPage() {
                 </div>
               </div>
             ) : (
-              <span style={{ color: 'var(--color-warning)', fontSize: '0.875rem' }}>⚠️ Unassigned</span>
+              <span style={{ color: 'var(--color-warning)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <AlertTriangle size={14} strokeWidth={1.75} /> Unassigned
+              </span>
             )}
             {canManageTeam && executives.length > 0 && (
               <div style={{ marginTop: '0.75rem' }}>
@@ -316,7 +330,10 @@ export default function LeadDetailPage() {
                     display: 'flex', alignItems: 'center', gap: '0.5rem',
                     border: '1px solid var(--color-border-light)',
                   }}>
-                    <span>{task.status === 'completed' ? '✅' : '⏰'}</span>
+                    {task.status === 'completed'
+                      ? <CheckCircle size={13} strokeWidth={2} color="var(--color-success)" />
+                      : <Clock size={13} strokeWidth={1.75} color="var(--color-warning)" />
+                    }
                     <span style={{ flex: 1, textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>{task.title}</span>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{formatDateTime(task.due_date)}</span>
                   </div>

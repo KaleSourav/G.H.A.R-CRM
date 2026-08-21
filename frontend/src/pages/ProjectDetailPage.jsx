@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectsAPI } from '../services/api';
 import { formatCurrency } from '../utils/helpers';
+import { Plus, MapPin } from 'lucide-react';
 import UnitGrid from '../components/projects/UnitGrid';
 import UnitForm from '../components/projects/UnitForm';
 import toast from 'react-hot-toast';
@@ -52,9 +53,15 @@ export default function ProjectDetailPage() {
                 </span>
               )}
             </div>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{project.developer_name} • 📍 {project.location}</p>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              {project.developer_name && <span>{project.developer_name} · </span>}
+              <MapPin size={12} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              {project.location}
+            </p>
           </div>
-          <button onClick={() => setShowUnitForm(true)} className="btn btn-primary btn-sm">+ Add Unit</button>
+          <button onClick={() => setShowUnitForm(true)} className="btn btn-primary btn-sm">
+            <Plus size={13} strokeWidth={2.5} /> Add Unit
+          </button>
         </div>
 
         {/* Stats */}

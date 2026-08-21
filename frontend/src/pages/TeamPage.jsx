@@ -3,6 +3,7 @@ import { teamAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ROLES } from '../utils/constants';
 import { formatDate, getInitials } from '../utils/helpers';
+import { Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function TeamPage() {
@@ -61,7 +62,9 @@ export default function TeamPage() {
           <p className="page-subtitle">{team.length} team members</p>
         </div>
         {isAdmin && (
-          <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">+ Add User</button>
+          <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">
+            <Plus size={13} strokeWidth={2.5} /> Add User
+          </button>
         )}
       </div>
 
@@ -128,7 +131,7 @@ export default function TeamPage() {
           <div className="modal">
             <div className="modal-header">
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Add Team Member</h2>
-              <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-icon">✕</button>
+              <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-icon"><X size={18} strokeWidth={1.75} /></button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

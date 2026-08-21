@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectsAPI } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/helpers';
+import { Plus, Building2, MapPin, Rocket, Home } from 'lucide-react';
 import ProjectForm from '../components/projects/ProjectForm';
 import toast from 'react-hot-toast';
 
@@ -29,19 +30,23 @@ export default function ProjectsPage() {
           <h1 className="page-title">Projects & Inventory</h1>
           <p className="page-subtitle">{projects.length} projects</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">+ Add Project</button>
+        <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">
+          <Plus size={13} strokeWidth={2.5} /> Add Project
+        </button>
       </div>
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}><span className="spinner" style={{ width: 28, height: 28 }} /></div>
       ) : projects.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state-icon">🏗️</span>
+          <div className="empty-state-icon"><Building2 size={22} strokeWidth={1.5} /></div>
           <div>
             <p style={{ fontWeight: 600 }}>No projects yet</p>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Add your first project to manage inventory</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">+ Add Project</button>
+          <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">
+            <Plus size={13} strokeWidth={2.5} /> Add Project
+          </button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
@@ -57,7 +62,7 @@ export default function ProjectsPage() {
                 {/* Status ribbon */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                   <span className={`badge ${proj.status === 'active' ? 'badge-success' : proj.status === 'upcoming' ? 'badge-info' : 'badge-neutral'}`}>
-                    {proj.status === 'active' ? '🟢' : proj.status === 'upcoming' ? '🔵' : '⚪'} {proj.status}
+                    {proj.status}
                   </span>
                   {proj.rera_number && (
                     <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', background: 'var(--color-surface-2)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
@@ -70,8 +75,9 @@ export default function ProjectsPage() {
                 {proj.developer_name && (
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>{proj.developer_name}</p>
                 )}
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                  📍 {proj.location}
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <MapPin size={12} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                  {proj.location}
                 </p>
 
                 {/* Price range */}
@@ -101,8 +107,16 @@ export default function ProjectsPage() {
 
                 {/* Dates */}
                 <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  {proj.launch_date && <span>🚀 Launch: {formatDate(proj.launch_date)}</span>}
-                  {proj.possession_date && <span>🏠 Possession: {formatDate(proj.possession_date)}</span>}
+                  {proj.launch_date && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Rocket size={11} strokeWidth={1.75} /> Launch: {formatDate(proj.launch_date)}
+                    </span>
+                  )}
+                  {proj.possession_date && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Home size={11} strokeWidth={1.75} /> Possession: {formatDate(proj.possession_date)}
+                    </span>
+                  )}
                 </div>
 
                 {/* Amenities */}

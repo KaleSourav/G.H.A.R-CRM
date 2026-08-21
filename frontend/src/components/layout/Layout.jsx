@@ -1,14 +1,35 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard, Users, Kanban, CheckSquare,
+  Building2, UserCircle2, Settings, MoreHorizontal,
+} from 'lucide-react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import { useAuth } from '../../context/AuthContext';
+
+const BOTTOM_NAV = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard',
+    roles: ['admin', 'manager', 'executive', 'front_office', 'finance'] },
+  { icon: Users,           label: 'Leads',     path: '/leads',
+    roles: ['admin', 'manager', 'executive', 'front_office'] },
+  { icon: Kanban,          label: 'Pipeline',  path: '/pipeline',
+    roles: ['admin', 'manager', 'executive'] },
+  { icon: CheckSquare,     label: 'Tasks',     path: '/tasks',
+    roles: ['admin', 'manager', 'executive'] },
+];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
+
+  const filteredNav = BOTTOM_NAV.filter(
+    item => !user?.role || item.roles.includes(user.role)
+  );
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Mobile overlay */}
@@ -16,8 +37,9 @@ export default function Layout() {
         <div
           onClick={() => setSidebarOpen(false)}
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-            zIndex: 199, display: 'none',
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 199,
           }}
           className="mobile-overlay"
         />
@@ -30,12 +52,13 @@ export default function Layout() {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'margin-left 250ms ease',
+        transition: 'margin-left 200ms ease',
       }}>
         <Topbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <main style={{
+
+        <main className="main-content" style={{
           flex: 1,
-          padding: '1.5rem',
+          padding: 'var(--content-pad)',
           marginTop: 'var(--topbar-height)',
           maxWidth: '1600px',
           width: '100%',
@@ -46,9 +69,38 @@ export default function Layout() {
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation */}
+      <nav className="bottom-nav">
+        {filteredNav.map(({ icon: Icon, label, path }) => (
+          <NavLink
+            key={path}
+            to={path}
+            className={({ isActive }) =>
+              `bottom-nav-item${isActive ? ' active' : ''}`
+            }
+          >
+            <Icon size={20} strokeWidth={1.75} />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+        {/* More button for admin/manager extra pages */}
+        {['admin', 'manager'].includes(user?.role) && (
+          <button
+            className="bottom-nav-item"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <MoreHorizontal size={20} strokeWidth={1.75} />
+            <span>More</span>
+          </button>
+        )}
+      </nav>
+
       <style>{`
         @media (max-width: 768px) {
-          .mobile-overlay { display: block !important; }
+          .mobile-overlay { display: block; }
+        }
+        @media (min-width: 769px) {
+          .mobile-overlay { display: none; }
         }
       `}</style>
     </div>
