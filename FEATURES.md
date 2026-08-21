@@ -201,6 +201,13 @@ G.H.A.R CRM is a production-ready, full-stack real estate Customer Relationship 
 
 ---
 
+### 13. 🌓 Dark Mode & Light Mode Theme Switcher (`ThemeContext.jsx`)
+- **Instant One-Click Toggle**: Accessible via the `Sun`/`Moon` button in the top navigation bar and sidebar footer.
+- **Persistent Preferences**: Automatically stores user selection in `localStorage` (`ghar_theme`) and applies it on reload.
+- **Seamless CSS Variable System**: Dynamic transition between Deep Navy dark mode (`#080E1A`, `#0D1526`) and Crisp Slate light mode (`#F8FAFC`, `#FFFFFF`) with optimized typography contrast, glassmorphic headers, and tailored form controls.
+
+---
+
 ## 💻 Technical Stack Matrix
 
 | Layer | Technologies Used | Key Packages |
