@@ -8,7 +8,7 @@ import {
 import { leadsAPI, tasksAPI, teamAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PIPELINE_STAGES, ACTIVITY_TYPE_CONFIG, STAGE_CONFIG, PRIORITY_CONFIG, LOST_REASONS } from '../utils/constants';
-import { formatDateTime, formatPhone, formatCurrency, formatRelative, getInitials, stageToClass } from '../utils/helpers';
+import { formatDateTime, formatPhone, formatCurrency, formatRelative, getInitials, stageToClass, getWhatsAppUrl } from '../utils/helpers';
 import ActivityTimeline from '../components/leads/ActivityTimeline';
 import TaskForm from '../components/tasks/TaskForm';
 import LeadForm from '../components/leads/LeadForm';
@@ -132,9 +132,18 @@ export default function LeadDetailPage() {
               {lead.sla_breach && <span className="badge badge-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><AlertTriangle size={10} strokeWidth={2} /> SLA Breach</span>}
             </div>
             <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', flexWrap: 'wrap', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Phone size={12} strokeWidth={1.75} />
                 <a href={`tel:${lead.phone}`} style={{ color: 'var(--color-info)' }}>{formatPhone(lead.phone)}</a>
+                <a
+                  href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="badge badge-success"
+                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}
+                >
+                  <MessageSquare size={10} strokeWidth={2.5} /> Chat
+                </a>
               </span>
               {lead.email && <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Mail size={12} strokeWidth={1.75} />{lead.email}</span>}
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Tag size={12} strokeWidth={1.75} />{lead.source}{lead.sub_source && ` · ${lead.sub_source}`}</span>
@@ -159,13 +168,13 @@ export default function LeadDetailPage() {
               <Phone size={13} strokeWidth={2} /> Call
             </a>
             <a
-              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`}
+              href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
               target="_blank"
               rel="noreferrer"
               className="btn btn-secondary btn-sm"
-              style={{ gap: '0.35rem', color: 'var(--color-success)', borderColor: 'rgba(34,197,94,0.3)' }}
+              style={{ gap: '0.35rem', color: 'var(--color-success)', borderColor: 'rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.08)' }}
             >
-              <MessageSquare size={13} strokeWidth={2} /> WhatsApp
+              <MessageSquare size={13} strokeWidth={2.5} /> WhatsApp
             </a>
             <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
               <Plus size={13} strokeWidth={2.5} /> Task

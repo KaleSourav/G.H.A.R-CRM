@@ -115,12 +115,17 @@ export const downloadCSV = (data, filename) => {
   URL.revokeObjectURL(url);
 };
 
-// ── Copy to clipboard ──────────────────────────────────────────────────────
-export const copyToClipboard = async (text) => {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
+// ── WhatsApp URL Generator ────────────────────────────────────────────────
+export const getWhatsAppUrl = (phone, leadName = '', projectName = '') => {
+  if (!phone) return '#';
+  let digits = String(phone).replace(/\D/g, '');
+  if (digits.length === 10) {
+    digits = '91' + digits;
   }
+  let greeting = leadName ? `Hello ${leadName}` : 'Hello';
+  let text = projectName 
+    ? `${greeting}, thank you for connecting regarding ${projectName}. How may we assist you today?`
+    : `${greeting}, thank you for connecting with G.H.A.R Real Estate. How may we assist you today?`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 };
+

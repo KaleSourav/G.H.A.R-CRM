@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { leadsAPI, teamAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { PIPELINE_STAGES, LEAD_SOURCES, CONFIGURATIONS, PURPOSES, LOST_REASONS, PRIORITY_CONFIG, STAGE_CONFIG } from '../utils/constants';
-import { formatDate, formatPhone, formatCurrency, formatRelative, getInitials, downloadCSV } from '../utils/helpers';
+import { formatDate, formatPhone, formatCurrency, formatRelative, getInitials, downloadCSV, getWhatsAppUrl } from '../utils/helpers';
 import {
   Download, Upload, SlidersHorizontal, Search, Pencil,
   Plus, Users, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown,
-  Phone, MessageSquare, Flame, CheckCircle, Clock, ChevronRight,
+  Phone, MessageSquare, Flame, CheckCircle, Clock, ChevronRight, Building2,
 } from 'lucide-react';
 import LeadForm from '../components/leads/LeadForm';
 import LeadFilters from '../components/leads/LeadFilters';
@@ -253,24 +252,29 @@ export default function LeadsPage() {
             />
           </div>
 
-          {/* Quick preset filters */}
+          {/* Quick preset filters with professional vector icons */}
           <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
             {[
-              { key: 'all', label: 'All Leads' },
-              { key: 'hot', label: '🔥 Hot' },
-              { key: 'sla', label: '⚠️ SLA Breach' },
-              { key: 'new', label: 'New / Fresh' },
-              { key: 'site_visit', label: 'Site Visits' },
-            ].map(preset => (
-              <button
-                key={preset.key}
-                onClick={() => applyPreset(preset.key)}
-                className={`quick-action-pill ${activePreset === preset.key ? 'btn-primary' : ''}`}
-                style={activePreset === preset.key ? { background: 'var(--color-primary)', color: 'var(--text-inverse)', borderColor: 'var(--color-primary)' } : {}}
-              >
-                {preset.label}
-              </button>
-            ))}
+              { key: 'all', label: 'All Leads', icon: Users },
+              { key: 'hot', label: 'Hot', icon: Flame, color: 'var(--color-danger)' },
+              { key: 'sla', label: 'SLA Breach', icon: AlertTriangle, color: 'var(--color-warning)' },
+              { key: 'new', label: 'New / Fresh', icon: Plus, color: 'var(--color-info)' },
+              { key: 'site_visit', label: 'Site Visits', icon: Building2, color: 'var(--color-primary)' },
+            ].map(preset => {
+              const Icon = preset.icon;
+              const isActive = activePreset === preset.key;
+              return (
+                <button
+                  key={preset.key}
+                  onClick={() => applyPreset(preset.key)}
+                  className={`quick-action-pill ${isActive ? 'btn-primary' : ''}`}
+                  style={isActive ? { background: 'var(--color-primary)', color: 'var(--text-inverse)', borderColor: 'var(--color-primary)' } : {}}
+                >
+                  <Icon size={12} strokeWidth={2.25} color={isActive ? 'currentColor' : preset.color || 'currentColor'} />
+                  <span>{preset.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {selectedLeads.size > 0 && canManageTeam && (
@@ -385,11 +389,31 @@ export default function LeadsPage() {
                       </div>
                     </td>
                     <td data-label="Contact">
-                      <div style={{ fontSize: '0.8rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <Phone size={12} strokeWidth={1.75} color="var(--color-info)" />
-                          <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--color-info)', fontWeight: 600 }}>
+                      <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                          <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--color-info)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <Phone size={12} strokeWidth={1.75} />
                             {formatPhone(lead.phone)}
+                          </a>
+                          <a
+                            href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            className="badge badge-success"
+                            style={{
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              padding: '0.12rem 0.45rem',
+                              fontSize: '0.68rem',
+                              cursor: 'pointer',
+                              fontWeight: 700,
+                            }}
+                            title={`Open WhatsApp chat with ${lead.name}`}
+                          >
+                            <MessageSquare size={10} strokeWidth={2.5} /> WhatsApp
                           </a>
                         </div>
                         {lead.email && <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{lead.email}</div>}
@@ -447,14 +471,14 @@ export default function LeadsPage() {
                     <td onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
                         <a
-                          href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`}
+                          href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
                           target="_blank"
                           rel="noreferrer"
                           className="btn btn-ghost btn-sm btn-icon"
-                          title="WhatsApp"
+                          title={`Chat on WhatsApp with ${lead.name}`}
                           style={{ color: 'var(--color-success)' }}
                         >
-                          <MessageSquare size={13} strokeWidth={2} />
+                          <MessageSquare size={14} strokeWidth={2.2} />
                         </a>
                         <button
                           onClick={() => { setEditLead(lead); setShowLeadForm(true); }}

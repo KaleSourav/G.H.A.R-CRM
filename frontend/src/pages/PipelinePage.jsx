@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import { leadsAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { PIPELINE_STAGES, STAGE_CONFIG, PRIORITY_CONFIG } from '../utils/constants';
-import { formatPhone, formatCurrency, formatRelative, getInitials } from '../utils/helpers';
+import { formatPhone, formatCurrency, formatRelative, getInitials, getWhatsAppUrl } from '../utils/helpers';
 import {
   Phone, IndianRupee, AlertTriangle, Users, Layers,
   RefreshCw, ListFilter, MessageSquare, Flame, Sparkles, Building2,
@@ -140,14 +140,14 @@ function KanbanCard({ lead, onClick }) {
           <span>{formatPhone(lead.phone)}</span>
         </div>
         <a
-          href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`}
+          href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
           target="_blank"
           rel="noreferrer"
           onClick={e => e.stopPropagation()}
-          title="WhatsApp Chat"
+          title={`Chat with ${lead.name} on WhatsApp`}
           style={{ color: 'var(--color-success)', padding: '0.15rem' }}
         >
-          <MessageSquare size={12} strokeWidth={2} />
+          <MessageSquare size={13} strokeWidth={2.2} />
         </a>
       </div>
 
