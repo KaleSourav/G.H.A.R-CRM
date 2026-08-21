@@ -407,7 +407,7 @@ export default function LeadsPage() {
                     </td>
                     <td data-label="Contact">
                       <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--color-info)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }} title="Call Lead">
                             <Phone size={12} strokeWidth={1.75} />
                             {formatPhone(lead.phone)}
@@ -417,14 +417,15 @@ export default function LeadsPage() {
                             target="_blank"
                             rel="noreferrer"
                             onClick={e => e.stopPropagation()}
+                            className="whatsapp-desktop-icon"
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              width: 22,
-                              height: 22,
+                              width: 24,
+                              height: 24,
                               borderRadius: '50%',
-                              background: 'rgba(37, 211, 102, 0.14)',
+                              background: 'rgba(37, 211, 102, 0.15)',
                               border: '1px solid rgba(37, 211, 102, 0.4)',
                               color: '#25D366',
                               transition: 'all 120ms ease',
@@ -432,7 +433,7 @@ export default function LeadsPage() {
                             }}
                             title={`Chat directly with ${lead.name} on WhatsApp`}
                           >
-                            <WhatsAppIcon size={12} />
+                            <WhatsAppIcon size={13} />
                           </a>
                         </div>
                         {lead.email && <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{lead.email}</div>}
@@ -487,8 +488,41 @@ export default function LeadsPage() {
                       <div>{formatDate(lead.created_at)}</div>
                       <div style={{ fontSize: '0.68rem' }}>{formatRelative(lead.last_activity_at)}</div>
                     </td>
-                    <td onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <td data-label="Actions" onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
+                      <div className="lead-card-actions" style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', alignItems: 'center', width: '100%' }}>
+                        <a
+                          href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mobile-whatsapp-btn btn btn-secondary btn-sm"
+                          style={{
+                            display: 'none',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            color: '#25D366',
+                            borderColor: 'rgba(37, 211, 102, 0.4)',
+                            background: 'rgba(37, 211, 102, 0.1)',
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                          }}
+                          title={`Open WhatsApp chat with ${lead.name}`}
+                        >
+                          <WhatsAppIcon size={14} /> WhatsApp
+                        </a>
+                        <a
+                          href={`tel:${lead.phone}`}
+                          className="mobile-call-btn btn btn-secondary btn-sm"
+                          style={{
+                            display: 'none',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            color: 'var(--color-info)',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          <Phone size={13} strokeWidth={2} /> Call
+                        </a>
                         <button
                           onClick={() => { setEditLead(lead); setShowLeadForm(true); }}
                           className="btn btn-ghost btn-sm btn-icon"

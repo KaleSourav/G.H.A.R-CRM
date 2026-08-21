@@ -582,7 +582,8 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.3; }
     margin-right: 0.5rem;
   }
   .table td[data-label="Lead Details"]::before,
-  .table td[data-label="Lead"]::before {
+  .table td[data-label="Lead"]::before,
+  .table td[data-label="Actions"]::before {
     display: none;
   }
   .table td[data-label="Contact"] > div {
@@ -591,13 +592,23 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.3; }
     align-items: flex-end;
     text-align: right;
   }
-  .table td[data-label="Contact"] a[title*="WhatsApp"] {
-    width: 26px !important;
-    height: 26px !important;
+  .whatsapp-desktop-icon {
+    display: none !important;
+  }
+  .mobile-whatsapp-btn,
+  .mobile-call-btn {
+    display: inline-flex !important;
+  }
+  .lead-card-actions {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 0.5rem !important;
   }
   .table td[style*="text-align: right"],
   .table td:last-child {
-    justify-content: flex-end;
+    justify-content: space-between;
     padding-top: 0.6rem;
     border-top: 1px solid var(--color-border-light);
     margin-top: 0.35rem;
