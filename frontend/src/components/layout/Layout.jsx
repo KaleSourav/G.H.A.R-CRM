@@ -28,7 +28,7 @@ export default function Layout() {
   );
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', maxWidth: '100vw', width: '100%', overflowX: 'hidden', position: 'relative' }}>
       {/* Desktop Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -49,7 +49,7 @@ export default function Layout() {
       <div style={{
         flex: 1,
         minWidth: 0,
-        maxWidth: '100vw',
+        width: 0,          /* flex child — grows via flex:1 but won't push past container */
         overflowX: 'hidden',
         marginLeft: 'var(--sidebar-width)',
         minHeight: '100vh',
@@ -62,14 +62,12 @@ export default function Layout() {
         <main className="main-content" style={{
           flex: 1,
           minWidth: 0,
-          maxWidth: '100%',
+          width: '100%',
           boxSizing: 'border-box',
           overflowX: 'hidden',
           padding: 'var(--content-pad)',
           marginTop: 'var(--topbar-height)',
-          width: '100%',
-          marginLeft: 'auto',
-          marginRight: 'auto',
+          paddingBottom: 'calc(var(--bottom-nav-h) + var(--content-pad))',
         }}>
           <Outlet />
         </main>
