@@ -48,6 +48,9 @@ export default function Layout() {
       {/* Main content */}
       <div style={{
         flex: 1,
+        minWidth: 0,
+        maxWidth: '100vw',
+        overflowX: 'hidden',
         marginLeft: 'var(--sidebar-width)',
         minHeight: '100vh',
         display: 'flex',
@@ -58,9 +61,12 @@ export default function Layout() {
 
         <main className="main-content" style={{
           flex: 1,
+          minWidth: 0,
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+          overflowX: 'hidden',
           padding: 'var(--content-pad)',
           marginTop: 'var(--topbar-height)',
-          maxWidth: '1600px',
           width: '100%',
           marginLeft: 'auto',
           marginRight: 'auto',

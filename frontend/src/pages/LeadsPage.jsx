@@ -174,7 +174,7 @@ export default function LeadsPage() {
   const convertedCount = leads.filter(l => l.stage === 'Sold / Closed Won' || l.stage === 'Booking').length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
       {/* ── Page Header ─────────────────────────────────────────────────── */}
       <div className="page-header">
         <div>
@@ -211,66 +211,64 @@ export default function LeadsPage() {
       </div>
 
       {/* ── Quick Summary Stat Pills ────────────────────────────────────── */}
-      <div className="leads-stat-grid" style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem',
-      }}>
-        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div className="leads-stat-grid">
+        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
           <div className="icon-box icon-box-sm" style={{ background: 'var(--color-accent-dim)', color: 'var(--color-accent)' }}>
             <Users size={16} strokeWidth={2} />
           </div>
-          <div>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{pagination.total}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>Total Enquiries</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Total Enquiries</div>
           </div>
         </div>
 
-        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
           <div className="icon-box icon-box-sm" style={{ background: 'rgba(239,68,68,0.14)', color: 'var(--color-danger)' }}>
             <Flame size={16} strokeWidth={2} />
           </div>
-          <div>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-danger)', lineHeight: 1 }}>{hotCount}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>Hot Priority</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Hot Priority</div>
           </div>
         </div>
 
-        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
           <div className="icon-box icon-box-sm" style={{ background: 'rgba(245,158,11,0.14)', color: 'var(--color-warning)' }}>
             <AlertTriangle size={16} strokeWidth={2} />
           </div>
-          <div>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-warning)', lineHeight: 1 }}>{slaCount}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>SLA Alerts</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>SLA Alerts</div>
           </div>
         </div>
 
-        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
           <div className="icon-box icon-box-sm" style={{ background: 'var(--color-success-dim)', color: 'var(--color-success)' }}>
             <CheckCircle size={16} strokeWidth={2} />
           </div>
-          <div>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-success)', lineHeight: 1 }}>{convertedCount}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>Booked / Won</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Booked / Won</div>
           </div>
         </div>
       </div>
 
       {/* ── Search & Preset Filter Pills ────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div className="leads-search-row" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: 260, maxWidth: 440 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', minWidth: 0 }}>
+        <div className="leads-search-row">
+          <div className="leads-search-input-wrapper" style={{ position: 'relative', width: '100%', minWidth: 0 }}>
             <Search size={15} strokeWidth={1.75} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               className="form-input"
               placeholder="Search by name, phone (+91), or email..."
               value={searchTerm}
               onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              style={{ paddingLeft: '2.5rem' }}
+              style={{ paddingLeft: '2.5rem', width: '100%', boxSizing: 'border-box' }}
             />
           </div>
 
           {/* Quick preset filters with professional vector icons */}
-          <div className="filter-presets-scroll" style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.2rem', WebkitOverflowScrolling: 'touch' }}>
+          <div className="filter-presets-scroll" style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.2rem', WebkitOverflowScrolling: 'touch', width: '100%', minWidth: 0 }}>
             {[
               { key: 'all', label: 'All Leads', icon: Users },
               { key: 'hot', label: 'Hot', icon: Flame, color: 'var(--color-danger)' },
