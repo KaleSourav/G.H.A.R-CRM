@@ -314,8 +314,8 @@ export default function LeadsPage() {
         />
       )}
 
-      {/* ── Rich Leads Table ────────────────────────────────────────────── */}
-      <div className="table-container">
+      {/* ── Desktop Table ─────────────────────────────────────────────── */}
+      <div className="table-container leads-desktop-table">
         <table className="table">
           <thead>
             <tr>
@@ -332,9 +332,9 @@ export default function LeadsPage() {
                 Stage <SortIcon col="stage" />
               </th>
               <th onClick={() => handleSort('priority')} style={{ cursor: 'pointer' }}>
-                Intent & Score <SortIcon col="priority" />
+                Intent &amp; Score <SortIcon col="priority" />
               </th>
-              <th>Budget & Config</th>
+              <th>Budget &amp; Config</th>
               {canViewAllLeads && <th>Assigned Executive</th>}
               <th onClick={() => handleSort('created_at')} style={{ cursor: 'pointer' }}>
                 Added <SortIcon col="created_at" />
@@ -342,6 +342,7 @@ export default function LeadsPage() {
               <th style={{ width: 100, textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {loading ? (
               <tr><td colSpan={10} style={{ textAlign: 'center', padding: '4rem' }}>
@@ -376,128 +377,68 @@ export default function LeadsPage() {
                         <input type="checkbox" checked={selectedLeads.has(lead.id)} onChange={() => {}} />
                       </td>
                     )}
-                    <td data-label="Lead">
+                    <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{
-                          width: 36, height: 36, borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #4F6FE8, #7C3AED)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '0.75rem', fontWeight: 800, color: 'white',
-                          flexShrink: 0, boxShadow: '0 2px 8px rgba(79,111,232,0.25)',
-                        }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #4F6FE8, #7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'white', flexShrink: 0 }}>
                           {getInitials(lead.name)}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                             {lead.name}
                             {lead.is_duplicate && <span className="badge badge-danger" style={{ fontSize: '0.58rem' }}>DUP</span>}
-                            {lead.sla_breach && (
-                              <span className="badge badge-danger" style={{ fontSize: '0.58rem', display: 'inline-flex', alignItems: 'center', gap: '2px' }} title="SLA Breach">
-                                <AlertTriangle size={10} strokeWidth={2} /> SLA
-                              </span>
-                            )}
+                            {lead.sla_breach && <span className="badge badge-danger" style={{ fontSize: '0.58rem' }} title="SLA Breach"><AlertTriangle size={10} strokeWidth={2} /> SLA</span>}
                           </div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                            {lead.source}{lead.sub_source ? ` · ${lead.sub_source}` : ''}
-                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{lead.source}{lead.sub_source ? ` · ${lead.sub_source}` : ''}</div>
                         </div>
                       </div>
                     </td>
-                    <td data-label="Contact">
+                    <td>
                       <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--color-info)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }} title="Call Lead">
-                          <Phone size={12} strokeWidth={1.75} />
-                          {formatPhone(lead.phone)}
+                        <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--color-info)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <Phone size={12} strokeWidth={1.75} />{formatPhone(lead.phone)}
                         </a>
                         {lead.email && <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{lead.email}</div>}
                       </div>
                     </td>
-                    <td data-label="Stage">
+                    <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                         <div className={`stage-dot ${STAGE_CONFIG[lead.stage]?.class}`} />
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: STAGE_CONFIG[lead.stage]?.color || 'var(--text-secondary)' }}>
-                          {STAGE_CONFIG[lead.stage]?.short || lead.stage}
-                        </span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: STAGE_CONFIG[lead.stage]?.color || 'var(--text-secondary)' }}>{STAGE_CONFIG[lead.stage]?.short || lead.stage}</span>
                       </div>
                     </td>
-                    <td data-label="Priority">
+                    <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <span className={`badge ${PRIORITY_CONFIG[lead.priority]?.class}`}>
-                          {PRIORITY_CONFIG[lead.priority]?.label}
-                        </span>
-                        <span className={`score-badge ${scoreClass}`}>
-                          {lead.lead_score || 0}/100
-                        </span>
+                        <span className={`badge ${PRIORITY_CONFIG[lead.priority]?.class}`}>{PRIORITY_CONFIG[lead.priority]?.label}</span>
+                        <span className={`score-badge ${scoreClass}`}>{lead.lead_score || 0}/100</span>
                       </div>
                     </td>
-                    <td data-label="Budget">
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {lead.budget_max ? formatCurrency(lead.budget_max) : lead.budget_min ? formatCurrency(lead.budget_min) : '—'}
-                      </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                        {lead.configuration || 'Any Config'} {lead.project?.name ? `· ${lead.project.name}` : ''}
-                      </div>
+                    <td>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{lead.budget_max ? formatCurrency(lead.budget_max) : lead.budget_min ? formatCurrency(lead.budget_min) : '—'}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{lead.configuration || 'Any Config'}{lead.project?.name ? ` · ${lead.project.name}` : ''}</div>
                     </td>
                     {canViewAllLeads && (
-                      <td data-label="Assignee" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                         {lead.assignee ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                            <div style={{
-                              width: 22, height: 22, borderRadius: '50%',
-                              background: 'var(--color-accent)', display: 'flex',
-                              alignItems: 'center', justifyContent: 'center',
-                              fontSize: '0.6rem', fontWeight: 700, color: 'white',
-                            }}>
-                              {getInitials(lead.assignee.name)}
-                            </div>
+                            <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>{getInitials(lead.assignee.name)}</div>
                             <span style={{ fontWeight: 500 }}>{lead.assignee.name}</span>
                           </div>
-                        ) : (
-                          <span style={{ color: 'var(--color-warning)', fontSize: '0.75rem', fontWeight: 600 }}>Unassigned</span>
-                        )}
+                        ) : <span style={{ color: 'var(--color-warning)', fontSize: '0.75rem', fontWeight: 600 }}>Unassigned</span>}
                       </td>
                     )}
-                    <td data-label="Added" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       <div>{formatDate(lead.created_at)}</div>
                       <div style={{ fontSize: '0.68rem' }}>{formatRelative(lead.last_activity_at)}</div>
                     </td>
                     <td onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <a
-                          href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn btn-ghost btn-sm btn-icon"
-                          title={`Chat directly with ${lead.name} on WhatsApp`}
-                          style={{
-                            color: '#25D366',
-                            background: 'rgba(37, 211, 102, 0.1)',
-                            border: '1px solid rgba(37, 211, 102, 0.3)',
-                            borderRadius: 'var(--radius-full)',
-                            width: 28,
-                            height: 28,
-                            padding: 0,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
+                        <a href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm btn-icon" title={`Chat with ${lead.name}`} style={{ color: '#25D366', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.3)', borderRadius: 'var(--radius-full)', width: 28, height: 28, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                           <WhatsAppIcon size={14} />
                         </a>
-                        <button
-                          onClick={() => { setEditLead(lead); setShowLeadForm(true); }}
-                          className="btn btn-ghost btn-sm btn-icon"
-                          title="Edit Lead"
-                          style={{ width: 28, height: 28, padding: 0 }}
-                        >
+                        <button onClick={() => { setEditLead(lead); setShowLeadForm(true); }} className="btn btn-ghost btn-sm btn-icon" title="Edit" style={{ width: 28, height: 28, padding: 0 }}>
                           <Pencil size={13} strokeWidth={1.75} />
                         </button>
-                        <button
-                          onClick={() => navigate(`/leads/${lead.id}`)}
-                          className="btn btn-ghost btn-sm btn-icon"
-                          title="View Details"
-                          style={{ width: 28, height: 28, padding: 0 }}
-                        >
+                        <button onClick={() => navigate(`/leads/${lead.id}`)} className="btn btn-ghost btn-sm btn-icon" title="View" style={{ width: 28, height: 28, padding: 0 }}>
                           <ChevronRight size={14} strokeWidth={2} />
                         </button>
                       </div>
@@ -508,6 +449,126 @@ export default function LeadsPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* ── Mobile Card List ──────────────────────────────────────────────── */}
+      <div className="leads-mobile-cards">
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+            <span className="spinner" style={{ width: 28, height: 28 }} />
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon"><Users size={24} strokeWidth={1.5} /></div>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: '1rem' }}>No leads found</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Add your first lead to get started</p>
+            </div>
+            <button onClick={() => setShowLeadForm(true)} className="btn btn-primary btn-sm"><Plus size={14} strokeWidth={2.5} /> Add Lead</button>
+          </div>
+        ) : (
+          leads.map(lead => {
+            const scoreClass = (lead.lead_score || 0) >= 70 ? 'high' : (lead.lead_score || 0) >= 40 ? 'medium' : 'low';
+            return (
+              <div
+                key={lead.id}
+                className="lead-mobile-card"
+                onClick={() => navigate(`/leads/${lead.id}`)}
+              >
+                {/* Row 1: Avatar + Name + Badges + Stage */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #4F6FE8, #7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                    {getInitials(lead.name)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {lead.name}
+                        {lead.is_duplicate && <span className="badge badge-danger" style={{ fontSize: '0.55rem', marginLeft: '0.3rem' }}>DUP</span>}
+                        {lead.sla_breach && <span className="badge badge-danger" style={{ fontSize: '0.55rem', marginLeft: '0.3rem' }}>SLA</span>}
+                      </div>
+                      {/* Stage badge right aligned */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
+                        <div className={`stage-dot ${STAGE_CONFIG[lead.stage]?.class}`} style={{ width: 7, height: 7 }} />
+                        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: STAGE_CONFIG[lead.stage]?.color || 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                          {STAGE_CONFIG[lead.stage]?.short || lead.stage}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                      {lead.source}{lead.sub_source ? ` · ${lead.sub_source}` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Phone + Intent pill */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.6rem' }}>
+                  <a
+                    href={`tel:${lead.phone}`}
+                    onClick={e => e.stopPropagation()}
+                    style={{ color: 'var(--color-info)', fontWeight: 600, fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                  >
+                    <Phone size={13} strokeWidth={1.75} />{formatPhone(lead.phone)}
+                  </a>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <span className={`badge ${PRIORITY_CONFIG[lead.priority]?.class}`} style={{ fontSize: '0.65rem' }}>{PRIORITY_CONFIG[lead.priority]?.label}</span>
+                    <span className={`score-badge ${scoreClass}`} style={{ fontSize: '0.65rem' }}>{lead.lead_score || 0}/100</span>
+                  </div>
+                </div>
+
+                {/* Row 3: Budget + Config */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.4rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {lead.budget_max ? formatCurrency(lead.budget_max) : lead.budget_min ? formatCurrency(lead.budget_min) : '—'}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
+                      {lead.configuration || 'Any Config'}
+                    </span>
+                  </div>
+                  {canViewAllLeads && (
+                    <span style={{ fontSize: '0.72rem', color: lead.assignee ? 'var(--text-secondary)' : 'var(--color-warning)', fontWeight: 600 }}>
+                      {lead.assignee ? lead.assignee.name : 'Unassigned'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Row 4: Date + Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.6rem', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border-light)' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    {formatDate(lead.created_at)} · {formatRelative(lead.last_activity_at)}
+                  </div>
+                  {/* Action buttons — always visible */}
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                    <a
+                      href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={`WhatsApp ${lead.name}`}
+                      style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#25D366', flexShrink: 0 }}
+                    >
+                      <WhatsAppIcon size={15} />
+                    </a>
+                    <button
+                      onClick={() => { setEditLead(lead); setShowLeadForm(true); }}
+                      title="Edit"
+                      style={{ width: 32, height: 32, borderRadius: 'var(--radius)', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
+                    >
+                      <Pencil size={13} strokeWidth={1.75} />
+                    </button>
+                    <button
+                      onClick={() => navigate(`/leads/${lead.id}`)}
+                      title="View Details"
+                      style={{ width: 32, height: 32, borderRadius: 'var(--radius)', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
+                    >
+                      <ChevronRight size={14} strokeWidth={2} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       <Pagination
