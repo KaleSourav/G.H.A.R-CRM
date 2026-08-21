@@ -10,6 +10,7 @@ import {
   RefreshCw, ListFilter, MessageSquare, Flame, Sparkles, Building2,
 } from 'lucide-react';
 import LostReasonModal from '../components/pipeline/LostReasonModal';
+import { WhatsAppIcon } from './LeadsPage';
 import toast from 'react-hot-toast';
 
 // ── Kanban Column ─────────────────────────────────────────────────────────
@@ -145,9 +146,20 @@ function KanbanCard({ lead, onClick }) {
           rel="noreferrer"
           onClick={e => e.stopPropagation()}
           title={`Chat with ${lead.name} on WhatsApp`}
-          style={{ color: 'var(--color-success)', padding: '0.15rem' }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            background: 'rgba(37, 211, 102, 0.14)',
+            border: '1px solid rgba(37, 211, 102, 0.35)',
+            color: '#25D366',
+            flexShrink: 0,
+          }}
         >
-          <MessageSquare size={13} strokeWidth={2.2} />
+          <WhatsAppIcon size={11} />
         </a>
       </div>
 

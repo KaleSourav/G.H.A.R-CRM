@@ -13,6 +13,7 @@ import ActivityTimeline from '../components/leads/ActivityTimeline';
 import TaskForm from '../components/tasks/TaskForm';
 import LeadForm from '../components/leads/LeadForm';
 import LostReasonModal from '../components/pipeline/LostReasonModal';
+import { WhatsAppIcon } from './LeadsPage';
 import toast from 'react-hot-toast';
 
 export default function LeadDetailPage() {
@@ -132,17 +133,29 @@ export default function LeadDetailPage() {
               {lead.sla_breach && <span className="badge badge-danger" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><AlertTriangle size={10} strokeWidth={2} /> SLA Breach</span>}
             </div>
             <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', flexWrap: 'wrap', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                 <Phone size={12} strokeWidth={1.75} />
                 <a href={`tel:${lead.phone}`} style={{ color: 'var(--color-info)' }}>{formatPhone(lead.phone)}</a>
                 <a
                   href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
                   target="_blank"
                   rel="noreferrer"
-                  className="badge badge-success"
-                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.2rem', padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    background: 'rgba(37, 211, 102, 0.14)',
+                    border: '1px solid rgba(37, 211, 102, 0.4)',
+                    color: '#25D366',
+                    transition: 'all 120ms ease',
+                    flexShrink: 0,
+                  }}
+                  title={`Chat directly with ${lead.name} on WhatsApp`}
                 >
-                  <MessageSquare size={10} strokeWidth={2.5} /> Chat
+                  <WhatsAppIcon size={12} />
                 </a>
               </span>
               {lead.email && <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Mail size={12} strokeWidth={1.75} />{lead.email}</span>}
@@ -172,9 +185,9 @@ export default function LeadDetailPage() {
               target="_blank"
               rel="noreferrer"
               className="btn btn-secondary btn-sm"
-              style={{ gap: '0.35rem', color: 'var(--color-success)', borderColor: 'rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.08)' }}
+              style={{ gap: '0.35rem', color: '#25D366', borderColor: 'rgba(37,211,102,0.35)', background: 'rgba(37,211,102,0.08)' }}
             >
-              <MessageSquare size={13} strokeWidth={2.5} /> WhatsApp
+              <WhatsAppIcon size={14} /> WhatsApp
             </a>
             <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
               <Plus size={13} strokeWidth={2.5} /> Task

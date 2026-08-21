@@ -15,6 +15,22 @@ import CSVImportModal from '../components/common/CSVImportModal';
 import Pagination from '../components/common/Pagination';
 import toast from 'react-hot-toast';
 
+export function WhatsAppIcon({ size = 15, ...props }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.275-.1-.475-.15-.675.15-.2.3-.775.979-.95 1.179-.175.2-.35.225-.65.075-.301-.15-1.27-.468-2.42-1.493-.894-.798-1.498-1.784-1.673-2.084-.175-.3-.019-.462.132-.612.135-.135.301-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.226-.244-.585-.492-.506-.675-.515-.175-.008-.375-.01-.575-.01-.2 0-.525.075-.8.375-.275.3-1.05 1.026-1.05 2.502 0 1.475 1.075 2.899 1.225 3.1 0.15.2 2.115 3.23 5.124 4.53 0.716.31 1.275.495 1.71.633.72.228 1.375.196 1.892.119.577-.087 1.78-.727 2.03-1.43.25-.703.25-1.306.175-1.43-.075-.124-.275-.2-.576-.35z" />
+      <path d="M12.004 2c-5.523 0-10 4.477-10 10 0 1.764.457 3.42 1.258 4.862l-1.262 4.61 4.733-1.242c1.401.764 3.003 1.196 4.707 1.196 5.523 0 10-4.477 10-10s-4.477-10-10-10zm0 18.286c-1.54 0-2.983-.414-4.228-1.135l-.303-.178-2.809.737.75-2.738-.195-.311c-.787-1.256-1.215-2.716-1.215-4.237 0-4.424 3.576-8 8-8s8 3.576 8 8-3.576 8-8 8z" />
+    </svg>
+  );
+}
+
 export default function LeadsPage() {
   const { user, canViewAllLeads, canManageTeam } = useAuth();
   const navigate = useNavigate();
@@ -391,8 +407,8 @@ export default function LeadsPage() {
                     </td>
                     <td data-label="Contact">
                       <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-                          <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--color-info)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} style={{ color: 'var(--color-info)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }} title="Call Lead">
                             <Phone size={12} strokeWidth={1.75} />
                             {formatPhone(lead.phone)}
                           </a>
@@ -401,20 +417,22 @@ export default function LeadsPage() {
                             target="_blank"
                             rel="noreferrer"
                             onClick={e => e.stopPropagation()}
-                            className="badge badge-success"
                             style={{
-                              textDecoration: 'none',
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '0.25rem',
-                              padding: '0.12rem 0.45rem',
-                              fontSize: '0.68rem',
-                              cursor: 'pointer',
-                              fontWeight: 700,
+                              justifyContent: 'center',
+                              width: 22,
+                              height: 22,
+                              borderRadius: '50%',
+                              background: 'rgba(37, 211, 102, 0.14)',
+                              border: '1px solid rgba(37, 211, 102, 0.4)',
+                              color: '#25D366',
+                              transition: 'all 120ms ease',
+                              flexShrink: 0,
                             }}
-                            title={`Open WhatsApp chat with ${lead.name}`}
+                            title={`Chat directly with ${lead.name} on WhatsApp`}
                           >
-                            <MessageSquare size={10} strokeWidth={2.5} /> WhatsApp
+                            <WhatsAppIcon size={12} />
                           </a>
                         </div>
                         {lead.email && <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{lead.email}</div>}
@@ -470,16 +488,21 @@ export default function LeadsPage() {
                       <div style={{ fontSize: '0.68rem' }}>{formatRelative(lead.last_activity_at)}</div>
                     </td>
                     <td onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <a
                           href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
                           target="_blank"
                           rel="noreferrer"
                           className="btn btn-ghost btn-sm btn-icon"
-                          title={`Chat on WhatsApp with ${lead.name}`}
-                          style={{ color: 'var(--color-success)' }}
+                          title={`Chat directly with ${lead.name} on WhatsApp`}
+                          style={{
+                            color: '#25D366',
+                            background: 'rgba(37, 211, 102, 0.1)',
+                            border: '1px solid rgba(37, 211, 102, 0.3)',
+                            borderRadius: 'var(--radius-full)',
+                          }}
                         >
-                          <MessageSquare size={14} strokeWidth={2.2} />
+                          <WhatsAppIcon size={14} />
                         </a>
                         <button
                           onClick={() => { setEditLead(lead); setShowLeadForm(true); }}
