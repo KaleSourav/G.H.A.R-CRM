@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { leadsAPI, teamAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { PIPELINE_STAGES, LEAD_SOURCES, CONFIGURATIONS, PURPOSES, LOST_REASONS, PRIORITY_CONFIG, STAGE_CONFIG } from '../utils/constants';
 import { formatDate, formatPhone, formatCurrency, formatRelative, getInitials, downloadCSV, getWhatsAppUrl } from '../utils/helpers';
 import {
   Download, Upload, SlidersHorizontal, Search, Pencil,
