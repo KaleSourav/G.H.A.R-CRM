@@ -149,12 +149,28 @@ export default function LeadDetailPage() {
             </div>
           </div>
 
-          {/* Actions */}
-          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-            <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary btn-sm">
+          {/* Direct Actions Toolbar */}
+          <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', flexShrink: 0 }}>
+            <a
+              href={`tel:${lead.phone}`}
+              className="btn btn-primary btn-sm"
+              style={{ gap: '0.35rem' }}
+            >
+              <Phone size={13} strokeWidth={2} /> Call
+            </a>
+            <a
+              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary btn-sm"
+              style={{ gap: '0.35rem', color: 'var(--color-success)', borderColor: 'rgba(34,197,94,0.3)' }}
+            >
+              <MessageSquare size={13} strokeWidth={2} /> WhatsApp
+            </a>
+            <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
               <Plus size={13} strokeWidth={2.5} /> Task
             </button>
-            <button onClick={() => setShowEditForm(true)} className="btn btn-secondary btn-sm">
+            <button onClick={() => setShowEditForm(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
               <Pencil size={13} strokeWidth={1.75} /> Edit
             </button>
           </div>
