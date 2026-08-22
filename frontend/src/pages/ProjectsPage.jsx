@@ -40,7 +40,7 @@ export default function ProjectsPage() {
             <h1 className="page-title">Projects & Master Inventory</h1>
           </div>
           <p className="page-subtitle">
-            {projects.length} developments · {availableUnits} available of {totalUnits} total units ({absorptionRate}% absorption)
+            {projects.length} developments · {activeProjects} active projects · {totalLeads} total leads registered
           </p>
         </div>
         <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">
