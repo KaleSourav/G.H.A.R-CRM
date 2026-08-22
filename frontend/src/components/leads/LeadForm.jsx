@@ -53,6 +53,8 @@ export default function LeadForm({ lead, projects, executives, canAssign, onClos
 
   const f = (field) => ({ value: form[field], onChange: e => setForm(p => ({...p, [field]: e.target.value})) });
 
+  const selectedProject = projects.find(p => p.id === form.project_id) || null;
+
   return (
     <div className="modal-overlay">
       <div className="modal modal-lg">
@@ -101,12 +103,54 @@ export default function LeadForm({ lead, projects, executives, canAssign, onClos
               {/* Interest */}
               <div style={{ gridColumn: '1/-1', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', paddingTop: '0.5rem', paddingBottom: '0.25rem', borderBottom: '1px solid var(--color-border)' }}>Property Interest</div>
 
-              <div className="form-group">
+              {/* Visual Project Picker */}
+              <div style={{ gridColumn: '1/-1' }}>
                 <label className="form-label">Project Interested In</label>
-                <select className="form-select" {...f('project_id')}>
-                  <option value="">Any / Not Sure</option>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+
+                {/* Selected project preview */}
+                {selectedProject && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.75rem', background: 'var(--color-primary-dim)', border: '1.5px solid var(--color-primary)', borderRadius: 'var(--radius-lg)', marginBottom: '0.75rem' }}>
+                    {selectedProject.brochure_url && (
+                      <img src={selectedProject.brochure_url} alt={selectedProject.name} style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 'var(--radius)', flexShrink: 0 }} />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--color-primary)' }}>{selectedProject.name}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{selectedProject.location}</div>
+                    </div>
+                    <button type="button" onClick={() => setForm(p => ({...p, project_id: ''}))} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}>✕ Clear</button>
+                  </div>
+                )}
+
+                {/* Project cards grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', maxHeight: 280, overflowY: 'auto', paddingRight: '0.25rem' }}>
+                  {/* None option */}
+                  <div
+                    onClick={() => setForm(p => ({...p, project_id: ''}))}
+                    style={{ border: `1.5px solid ${!form.project_id ? 'var(--color-primary)' : 'var(--color-border)'}`, borderRadius: 'var(--radius)', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: !form.project_id ? 'var(--color-primary-dim)' : 'var(--color-surface-2)', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, minHeight: 60 }}
+                  >
+                    Any / Not Sure
+                  </div>
+
+                  {projects.map(p => (
+                    <div
+                      key={p.id}
+                      onClick={() => setForm(prev => ({...prev, project_id: p.id}))}
+                      style={{ border: `1.5px solid ${form.project_id === p.id ? 'var(--color-primary)' : 'var(--color-border)'}`, borderRadius: 'var(--radius)', overflow: 'hidden', cursor: 'pointer', background: form.project_id === p.id ? 'var(--color-primary-dim)' : 'var(--color-surface-2)', transition: 'all 150ms' }}
+                    >
+                      {p.brochure_url ? (
+                        <img src={p.brochure_url} alt={p.name} style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: 72, background: 'linear-gradient(135deg, #1a1f35, #2d3561)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontSize: '1.5rem' }}>🏢</span>
+                        </div>
+                      )}
+                      <div style={{ padding: '0.35rem 0.4rem' }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                        <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '0.1rem' }}>{p.location}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Configuration</label>

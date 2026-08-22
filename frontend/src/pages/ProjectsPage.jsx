@@ -114,35 +114,52 @@ export default function ProjectsPage() {
                   cursor: 'pointer',
                   transition: 'all 180ms ease',
                   display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                  background: 'radial-gradient(circle at top right, rgba(232,160,32,0.05), transparent 70%), var(--color-surface)',
+                  padding: 0, overflow: 'hidden',
                 }}
                 onClick={() => navigate(`/projects/${proj.id}`)}
                 onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
               >
-                <div>
-                  {/* Status & RERA ribbon */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                {/* ── Project Image ── */}
+                <div style={{ position: 'relative', height: 160, overflow: 'hidden', flexShrink: 0 }}>
+                  {proj.brochure_url ? (
+                    <img
+                      src={proj.brochure_url}
+                      alt={proj.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 300ms ease' }}
+                      onMouseEnter={e => e.target.style.transform = 'scale(1.04)'}
+                      onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #1a1f35, #2d3561)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Building2 size={40} strokeWidth={1} color="rgba(255,255,255,0.2)" />
+                    </div>
+                  )}
+                  {/* Gradient overlay with status & RERA */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
+                  <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', right: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className={`badge ${proj.status === 'active' ? 'badge-success' : proj.status === 'upcoming' ? 'badge-info' : 'badge-neutral'}`}>
                       {proj.status}
                     </span>
-                    {proj.rera_number ? (
-                      <span style={{ fontSize: '0.68rem', color: 'var(--color-success)', background: 'var(--color-success-dim)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-full)', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
-                        <ShieldCheck size={11} strokeWidth={2} /> RERA Verified
+                    {proj.rera_number && (
+                      <span style={{ fontSize: '0.65rem', color: '#4ade80', background: 'rgba(0,0,0,0.55)', padding: '0.2rem 0.45rem', borderRadius: 'var(--radius-full)', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: 600, backdropFilter: 'blur(4px)' }}>
+                        <ShieldCheck size={10} strokeWidth={2} /> RERA
                       </span>
-                    ) : (
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>RERA Pending</span>
                     )}
                   </div>
+                  {/* Name overlay on image bottom */}
+                  <div style={{ position: 'absolute', bottom: '0.6rem', left: '0.75rem', right: '0.75rem' }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.5)', lineHeight: 1.2 }}>{proj.name}</div>
+                    {proj.developer_name && (
+                      <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.8)', marginTop: '0.15rem' }}>by {proj.developer_name}</div>
+                    )}
+                  </div>
+                </div>
 
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>{proj.name}</h3>
-                  {proj.developer_name && (
-                    <p style={{ fontSize: '0.78rem', color: 'var(--color-primary)', fontWeight: 600, marginBottom: '0.35rem' }}>
-                      by {proj.developer_name}
-                    </p>
-                  )}
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <MapPin size={13} strokeWidth={1.75} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                <div style={{ padding: '0.875rem' }}>
+                  {/* Location */}
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <MapPin size={13} strokeWidth={1.75} color="var(--color-primary)" style={{ flexShrink: 0 }} />
                     {proj.location}
                   </p>
 
@@ -180,7 +197,7 @@ export default function ProjectsPage() {
                 {/* Card Footer: Dates & View link */}
                 <div style={{
                   borderTop: '1px solid var(--color-border-light)',
-                  paddingTop: '0.75rem', marginTop: '0.5rem',
+                  paddingTop: '0.65rem', marginTop: '0.5rem', marginLeft: '0.875rem', marginRight: '0.875rem', marginBottom: '0.75rem',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>
                   <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
