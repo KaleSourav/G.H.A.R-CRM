@@ -10,12 +10,21 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     const { status } = req.query;
-    let q = supabaseAdmin.from('projects').select('*, units(count)').eq('org_id', req.orgId);
+    let q = supabaseAdmin
+      .from('projects')
+      .select('*, leads(count)')
+      .eq('org_id', req.orgId);
     if (status) q = q.eq('status', status);
     q = q.order('created_at', { ascending: false });
     const { data, error } = await q;
     if (error) throw error;
-    res.json(data || []);
+    // Flatten lead count into each project
+    const projects = (data || []).map(p => ({
+      ...p,
+      lead_count: p.leads?.[0]?.count ?? 0,
+      leads: undefined,
+    }));
+    res.json(projects);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

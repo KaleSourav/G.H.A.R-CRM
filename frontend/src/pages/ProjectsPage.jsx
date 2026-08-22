@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectsAPI } from '../services/api';
-import { formatCurrency, formatDate } from '../utils/helpers';
+import { formatCurrency } from '../utils/helpers';
 import {
-  Plus, Building2, MapPin, Rocket, Home,
+  Plus, Building2, MapPin, Users,
   ShieldCheck, ArrowRight, Layers, CheckCircle2,
 } from 'lucide-react';
 import ProjectForm from '../components/projects/ProjectForm';
@@ -26,10 +26,9 @@ export default function ProjectsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const totalUnits = projects.reduce((acc, p) => acc + (p.total_units || 0), 0);
-  const availableUnits = projects.reduce((acc, p) => acc + (p.available_units || 0), 0);
-  const soldUnits = totalUnits - availableUnits;
-  const absorptionRate = totalUnits > 0 ? Math.round((soldUnits / totalUnits) * 100) : 0;
+  const totalLeads = projects.reduce((acc, p) => acc + (p.lead_count || 0), 0);
+  const activeProjects = projects.filter(p => p.status === 'active').length;
+  const upcomingProjects = projects.filter(p => p.status === 'upcoming').length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -51,7 +50,7 @@ export default function ProjectsPage() {
 
       {/* ── Project Stats Overview ──────────────────────────────────────── */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem',
       }}>
         <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div className="icon-box icon-box-sm" style={{ background: 'var(--color-primary-dim)', color: 'var(--color-primary)' }}>
@@ -59,7 +58,7 @@ export default function ProjectsPage() {
           </div>
           <div>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>{projects.length}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Active Developments</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Total Projects</div>
           </div>
         </div>
 
@@ -68,8 +67,8 @@ export default function ProjectsPage() {
             <CheckCircle2 size={16} strokeWidth={2} />
           </div>
           <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-success)' }}>{availableUnits}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Ready Inventory Units</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-success)' }}>{activeProjects}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Active Projects</div>
           </div>
         </div>
 
@@ -78,8 +77,18 @@ export default function ProjectsPage() {
             <Layers size={16} strokeWidth={2} />
           </div>
           <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-accent)' }}>{absorptionRate}%</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Overall Absorption Rate</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-accent)' }}>{upcomingProjects}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Upcoming Projects</div>
+          </div>
+        </div>
+
+        <div style={{ padding: '0.75rem 1rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="icon-box icon-box-sm" style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
+            <Users size={16} strokeWidth={2} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#6366f1' }}>{totalLeads}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Total Leads Registered</div>
           </div>
         </div>
       </div>
@@ -105,7 +114,6 @@ export default function ProjectsPage() {
       ) : (
         <div className="projects-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
           {projects.map(proj => {
-            const soldPct = proj.total_units ? Math.round(((proj.total_units - proj.available_units) / proj.total_units) * 100) : 0;
             return (
               <div
                 key={proj.id}
@@ -163,52 +171,25 @@ export default function ProjectsPage() {
                     {proj.location}
                   </p>
 
-                  {/* Price Range Badge */}
+                  {/* Price Range */}
                   {(proj.price_min || proj.price_max) && (
-                    <div style={{
-                      fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)',
-                      background: 'var(--color-primary-dim)', padding: '0.35rem 0.65rem',
-                      borderRadius: 'var(--radius)', marginBottom: '0.875rem', width: 'fit-content',
-                    }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-dim)', padding: '0.3rem 0.6rem', borderRadius: 'var(--radius)', marginBottom: '0.75rem', width: 'fit-content' }}>
                       {formatCurrency(proj.price_min)} – {formatCurrency(proj.price_max)}
                     </div>
                   )}
 
-                  {/* Inventory Absorption Progress */}
-                  <div style={{ marginBottom: '0.875rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-                      <span><strong style={{ color: 'var(--color-success)' }}>{proj.available_units}</strong> Available</span>
-                      <span><strong>{proj.total_units}</strong> Total Units</span>
-                    </div>
-                    <div style={{ height: 6, background: 'var(--color-surface-3)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%', width: `${soldPct}%`,
-                        background: soldPct > 75 ? 'var(--color-success)' : soldPct > 40 ? 'var(--color-primary)' : 'var(--color-info)',
-                        borderRadius: '3px', transition: 'width 0.5s ease',
-                      }} />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
-                      <span>{soldPct}% Absorption Rate</span>
-                      <span>{100 - soldPct}% Unsold</span>
-                    </div>
+                  {/* Lead Count */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.65rem', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 'var(--radius)', marginBottom: '0.5rem' }}>
+                    <Users size={14} strokeWidth={2} color="#6366f1" />
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#6366f1' }}>{proj.lead_count || 0}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Leads Registered</span>
                   </div>
                 </div>
 
-                {/* Card Footer: Dates & View link */}
-                <div style={{
-                  borderTop: '1px solid var(--color-border-light)',
-                  paddingTop: '0.65rem', marginTop: '0.5rem', marginLeft: '0.875rem', marginRight: '0.875rem', marginBottom: '0.75rem',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                }}>
-                  <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {proj.possession_date && (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <Home size={11} strokeWidth={1.75} /> Poss. {formatDate(proj.possession_date)}
-                      </span>
-                    )}
-                  </div>
+                {/* Card Footer */}
+                <div style={{ borderTop: '1px solid var(--color-border-light)', paddingTop: '0.65rem', marginTop: '0.25rem', marginLeft: '0.875rem', marginRight: '0.875rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    Explore Units <ArrowRight size={12} strokeWidth={2} />
+                    View Details <ArrowRight size={12} strokeWidth={2} />
                   </span>
                 </div>
               </div>
