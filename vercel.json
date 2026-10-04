@@ -1,15 +1,5 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build && mkdir -p dist/crm && mv dist/assets dist/crm/",
+  "buildCommand": "cd frontend && npm install && npm run build && mkdir -p dist/crm && mv dist/assets dist/crm/ || true",
   "outputDirectory": "frontend/dist",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/crm/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/crm",
-      "destination": "/index.html"
-    }
-  ]
+  "framework": "vite"
 }
