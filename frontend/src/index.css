@@ -548,11 +548,15 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.3; }
 
 /* ── Table ──────────────────────────────────────────────────────────────── */
 .table-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow-x: auto;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 
 .table {
@@ -1382,3 +1386,117 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.3; }
     margin: 0.5rem auto 0;
   }
 }
+
+/* ── Mobile Horizontal Swipe & Table Containment Utilities ──────────────── */
+.table-scroll-container,
+.table-responsive {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+.table-scroll-container::-webkit-scrollbar,
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+.table-scroll-container::-webkit-scrollbar-track,
+.table-responsive::-webkit-scrollbar-track {
+  background: var(--color-surface-2);
+}
+.table-scroll-container::-webkit-scrollbar-thumb,
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+}
+.table-scroll-container::-webkit-scrollbar-thumb:hover,
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+.mobile-swipe-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--color-surface-2);
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-swipe-hint {
+    display: flex;
+  }
+}
+
+/* Horizontal swipe track for pill buttons, balancers, and tabs */
+.horizontal-swipe-track {
+  display: flex !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x !important;
+  scrollbar-width: none !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding-bottom: 0.4rem !important;
+}
+.horizontal-swipe-track::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Balancer member pill button styles */
+.balancer-member-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-surface-2);
+  border: 1.5px solid var(--color-border);
+  color: var(--text-primary);
+  transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+  outline: none;
+}
+.balancer-member-pill:hover {
+  border-color: rgba(232, 160, 32, 0.4);
+  background: var(--color-surface-3);
+  transform: translateY(-1px);
+}
+.balancer-member-pill.active {
+  background: var(--color-primary-dim) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+  box-shadow: 0 0 12px rgba(232, 160, 32, 0.22);
+}
+.balancer-member-pill .badge-count {
+  background: var(--color-surface);
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+}
+.balancer-member-pill.active .badge-count {
+  background: var(--color-primary);
+  color: #080E1A;
+  border-color: var(--color-primary);
+}
+

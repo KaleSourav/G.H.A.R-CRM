@@ -38,21 +38,22 @@ router.get('/', async (req, res) => {
       `, { count: 'exact' })
       .eq('org_id', orgId);
 
-    // Role-based filtering (mirrors RLS but applied at query level for speed)
-    if (userRole === 'executive') {
-      queryBuilder = queryBuilder.eq('assigned_to', user.id);
-    }
-
     // Filters
     if (stage) queryBuilder = queryBuilder.eq('stage', stage);
     if (source) queryBuilder = queryBuilder.eq('source', source);
     if (priority) queryBuilder = queryBuilder.eq('priority', priority);
+
     if (assigned_to === 'unassigned') {
       queryBuilder = queryBuilder.is('assigned_to', null);
     } else if (assigned_to === 'me') {
       queryBuilder = queryBuilder.eq('assigned_to', user.id);
-    } else if (assigned_to && userRole !== 'executive') {
+    } else if (assigned_to && assigned_to !== 'all') {
       queryBuilder = queryBuilder.eq('assigned_to', assigned_to);
+    } else if (assigned_to === 'all') {
+      // Explicitly allow viewing all leads across the team in the Assigned Hub
+    } else if (userRole === 'executive') {
+      // Default view for executive when no specific assignment filter is requested
+      queryBuilder = queryBuilder.eq('assigned_to', user.id);
     }
     if (project_id) queryBuilder = queryBuilder.eq('project_id', project_id);
     if (sla_breach !== undefined) queryBuilder = queryBuilder.eq('sla_breach', sla_breach === 'true');
@@ -215,8 +216,8 @@ router.get('/:id', async (req, res) => {
 
     if (error || !lead) return res.status(404).json({ error: 'Lead not found' });
 
-    // Executive can only see their own leads
-    if (req.userRole === 'executive' && lead.assigned_to !== req.user.id) {
+    // Executive can only see their own leads or unassigned leads
+    if (req.userRole === 'executive' && lead.assigned_to && lead.assigned_to !== req.user.id) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
