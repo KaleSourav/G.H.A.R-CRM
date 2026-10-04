@@ -3,11 +3,11 @@ import { teamAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ROLES } from '../utils/constants';
 import { formatDate, getInitials } from '../utils/helpers';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Shield, ShieldCheck, UserCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function TeamPage() {
-  const { isAdmin, user } = useAuth();
+  const { isSuperAdmin, canCreateUsers, user } = useAuth();
   const [team, setTeam] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +27,10 @@ export default function TeamPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!canCreateUsers) {
+      toast.error('Only Super Admins (Founders) can create new users');
+      return;
+    }
     setSaving(true);
     try {
       await teamAPI.create(form);
@@ -40,32 +44,68 @@ export default function TeamPage() {
   };
 
   const handleDeactivate = async (id, name) => {
+    if (!canCreateUsers) {
+      toast.error('Only Super Admins can deactivate users');
+      return;
+    }
     if (!confirm(`Deactivate ${name}?`)) return;
     try {
       await teamAPI.delete(id);
       toast.success(`${name} deactivated`);
       load();
-    } catch { toast.error('Failed to deactivate user'); }
+    } catch (err) { toast.error('Failed to deactivate user'); }
   };
 
   const managers = team.filter(u => u.role === 'manager');
-  const byRole = team.reduce((acc, u) => { (acc[u.role] = acc[u.role] || []).push(u); return acc; }, {});
 
-  const roleOrder = ['admin', 'manager', 'executive', 'front_office', 'finance'];
-  const roleLabels = { admin: 'Admin', manager: 'Sales Managers', executive: 'Sales Executives', front_office: 'Front Office', finance: 'Finance' };
+  // Identify founders and group by display role
+  const byRole = team.reduce((acc, u) => {
+    let displayRole = u.role;
+    if (u.role === 'super_admin' || u.role === 'superadmin' || ['admin@ghar.in', 'sourav@ghar.in'].includes(u.email?.toLowerCase())) {
+      displayRole = 'super_admin';
+    }
+    (acc[displayRole] = acc[displayRole] || []).push(u);
+    return acc;
+  }, {});
+
+  const roleOrder = ['super_admin', 'admin', 'manager', 'executive', 'front_office', 'finance'];
+  const roleLabels = {
+    super_admin: 'Super Admins (Founders)',
+    admin: 'Admins',
+    manager: 'Sales Managers',
+    executive: 'Sales Executives',
+    front_office: 'Front Office',
+    finance: 'Finance',
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 className="page-title">Team</h1>
-          <p className="page-subtitle">{team.length} team members</p>
+          <h1 className="page-title">Team Directory</h1>
+          <p className="page-subtitle">{team.length} active team members</p>
         </div>
-        {isAdmin && (
-          <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">
-            <Plus size={13} strokeWidth={2.5} /> Add User
-          </button>
-        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {!canCreateUsers && (
+            <span style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-muted)',
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border)',
+              padding: '0.35rem 0.75rem',
+              borderRadius: 'var(--radius)',
+            }}>
+              Directory View · User creation & roles are managed by Founders (Super Admin)
+            </span>
+          )}
+
+          {canCreateUsers && (
+            <button onClick={() => setShowForm(true)} className="btn btn-primary btn-sm">
+              <Plus size={13} strokeWidth={2.5} /> Add User
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -74,7 +114,8 @@ export default function TeamPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           {roleOrder.filter(role => byRole[role]?.length).map(role => (
             <div key={role}>
-              <h2 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem' }}>
+              <h2 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {role === 'super_admin' && <ShieldCheck size={16} color="var(--color-primary)" />}
                 {roleLabels[role] || role}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
@@ -107,7 +148,7 @@ export default function TeamPage() {
                         {member.current_lead_count || 0} active leads
                         {member.manager && <span> · Reports to {member.manager.name}</span>}
                       </div>
-                      {isAdmin && member.id !== user?.id && member.status === 'active' && (
+                      {canCreateUsers && member.id !== user?.id && member.status === 'active' && (
                         <button
                           onClick={() => handleDeactivate(member.id, member.name)}
                           className="btn btn-ghost btn-sm"
@@ -125,8 +166,8 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Add User Modal */}
-      {showForm && (
+      {/* Add User Modal — Super Admin Only */}
+      {showForm && canCreateUsers && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-sheet-handle" />
@@ -151,9 +192,12 @@ export default function TeamPage() {
                 <div className="form-group">
                   <label className="form-label">Role *</label>
                   <select className="form-select" value={form.role} onChange={e => setForm(f => ({...f, role: e.target.value}))}>
-                    {ROLES.filter(r => r.value !== 'channel_partner').map(r => (
-                      <option key={r.value} value={r.value}>{r.label}</option>
-                    ))}
+                    <option value="super_admin">Super Admin (Founder — Full Access & XL Download)</option>
+                    <option value="admin">Admin (CRM Operations — No XL Download, No User Creation)</option>
+                    <option value="manager">Sales Manager</option>
+                    <option value="executive">Sales Executive</option>
+                    <option value="front_office">Front Office</option>
+                    <option value="finance">Finance</option>
                   </select>
                 </div>
                 {form.role === 'executive' && managers.length > 0 && (
@@ -186,6 +230,7 @@ export default function TeamPage() {
 
 function roleColor(role) {
   const colors = {
+    super_admin: '#E8A020, #B45309',
     admin: '#F59E0B, #D97706',
     manager: '#6366F1, #8B5CF6',
     executive: '#10B981, #059669',
@@ -194,3 +239,4 @@ function roleColor(role) {
   };
   return colors[role] || '#64748B, #475569';
 }
+

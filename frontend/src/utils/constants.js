@@ -104,6 +104,7 @@ export const ACTIVITY_TYPE_CONFIG = {
 
 // ── Roles ──────────────────────────────────────────────────────────────────
 export const ROLES = [
+  { value: 'super_admin',      label: 'Super Admin (Founder)' },
   { value: 'admin',            label: 'Admin' },
   { value: 'manager',          label: 'Sales Manager' },
   { value: 'executive',        label: 'Sales Executive' },

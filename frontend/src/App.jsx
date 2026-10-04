@@ -8,6 +8,7 @@ import Layout from './components/layout/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import LeadsPage from './pages/LeadsPage';
+import AssignedLeadsPage from './pages/AssignedLeadsPage';
 import LeadDetailPage from './pages/LeadDetailPage';
 import PipelinePage from './pages/PipelinePage';
 import TasksPage from './pages/TasksPage';
@@ -26,8 +27,9 @@ function RequireAuth({ children }) {
 }
 
 function RequireRole({ children, roles }) {
-  const { user, loading } = useAuth();
+  const { user, isSuperAdmin, loading } = useAuth();
   if (loading) return <AppLoader />;
+  if (isSuperAdmin) return children;
   if (!user || !roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
   return children;
 }
@@ -63,26 +65,27 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="leads" element={<LeadsPage />} />
+        <Route path="assigned" element={<AssignedLeadsPage />} />
         <Route path="leads/:id" element={<LeadDetailPage />} />
         <Route path="pipeline" element={<PipelinePage />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="projects" element={
-          <RequireRole roles={['admin', 'manager']}>
+          <RequireRole roles={['admin', 'manager', 'super_admin']}>
             <ProjectsPage />
           </RequireRole>
         } />
         <Route path="projects/:id" element={
-          <RequireRole roles={['admin', 'manager']}>
+          <RequireRole roles={['admin', 'manager', 'super_admin']}>
             <ProjectDetailPage />
           </RequireRole>
         } />
         <Route path="team" element={
-          <RequireRole roles={['admin', 'manager']}>
+          <RequireRole roles={['admin', 'manager', 'executive', 'super_admin']}>
             <TeamPage />
           </RequireRole>
         } />
         <Route path="settings" element={
-          <RequireRole roles={['admin']}>
+          <RequireRole roles={['admin', 'super_admin']}>
             <SettingsPage />
           </RequireRole>
         } />

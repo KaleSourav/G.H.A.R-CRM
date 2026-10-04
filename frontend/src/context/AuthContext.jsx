@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
-import { authAPI } from '../services/api';
+import { authAPI, leadsAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -53,17 +53,60 @@ export function AuthProvider({ children }) {
     setSession(null);
   };
 
-  const isAdmin = user?.role === 'admin';
-  const isManager = user?.role === 'manager';
-  const isExecutive = user?.role === 'executive';
-  const canManageTeam = isAdmin || isManager;
-  const canViewAllLeads = isAdmin || isManager;
+  // ── Role & Permission Definitions ──────────────────────────────────────────
+  const email = (user?.email || '').toLowerCase();
+  const role = (user?.role || '').toLowerCase();
+  const FOUNDER_EMAILS = ['admin@ghar.in', 'sourav@ghar.in'];
+
+  // Super Admin: Founders or users with super_admin role
+  const isSuperAdmin = role === 'super_admin' || role === 'superadmin' || FOUNDER_EMAILS.includes(email);
+  // Standard Admin (or Super Admin)
+  const isAdmin = isSuperAdmin || role === 'admin';
+  const isManager = role === 'manager';
+  const isExecutive = role === 'executive';
+
+  // Strict user-requested RBAC constraints:
+  // 1. Super Admins can download Excel sheet of leads; standard Admin CANNOT download it
+  const canDownloadExcel = isSuperAdmin;
+  // 2. Super Admins can create users & assign roles; standard Admin CANNOT create users or roles
+  const canCreateUsers = isSuperAdmin;
+  // 3. Team visibility and lead overview
+  const canManageTeam = isSuperAdmin || isAdmin || isManager;
+  const canViewAllLeads = isSuperAdmin || isAdmin || isManager;
+
+  // ── Assignment Notification Stats (for red dot & badge indicators) ──────────
+  const [assignedStats, setAssignedStats] = useState({
+    assignedToMeCount: 0,
+    unreadAssignmentNotifs: 0,
+    newAssignedCount: 0,
+    unassignedCount: 0,
+    hasPendingAlert: false,
+    teamMembers: [],
+  });
+
+  const refreshAssignedStats = useCallback(async () => {
+    if (!session?.user) return;
+    try {
+      const { data } = await leadsAPI.getAssignedStats();
+      if (data) setAssignedStats(data);
+    } catch {}
+  }, [session]);
+
+  useEffect(() => {
+    if (session?.user) {
+      refreshAssignedStats();
+      const interval = setInterval(refreshAssignedStats, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [session, refreshAssignedStats]);
 
   return (
     <AuthContext.Provider value={{
       session, user, loading,
       signIn, signOut,
-      isAdmin, isManager, isExecutive, canManageTeam, canViewAllLeads,
+      isSuperAdmin, isAdmin, isManager, isExecutive,
+      canDownloadExcel, canCreateUsers, canManageTeam, canViewAllLeads,
+      assignedStats, refreshAssignedStats,
       refreshProfile: () => loadUserProfile(session?.user),
     }}>
       {children}
@@ -76,3 +119,4 @@ export const useAuth = () => {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };
+

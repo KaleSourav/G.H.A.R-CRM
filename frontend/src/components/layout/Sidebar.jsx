@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, Kanban, CheckSquare,
+  LayoutDashboard, Users, UserCheck, Kanban, CheckSquare,
   Building2, UserCircle2, Settings, LogOut,
   Handshake, MessageSquare, Sparkles, Sun, Moon, X,
 } from 'lucide-react';
@@ -11,19 +11,22 @@ import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard',
-    roles: ['admin', 'manager', 'executive', 'front_office', 'finance'] },
+    roles: ['admin', 'manager', 'executive', 'front_office', 'finance', 'super_admin'] },
   { icon: Users,           label: 'Leads',     path: '/leads',
-    roles: ['admin', 'manager', 'executive', 'front_office'] },
+    roles: ['admin', 'manager', 'executive', 'front_office', 'super_admin'] },
+  { icon: UserCheck,       label: 'Assigned',  path: '/assigned',
+    roles: ['admin', 'manager', 'executive', 'front_office', 'super_admin'],
+    isAssignedTab: true },
   { icon: Kanban,          label: 'Pipeline',  path: '/pipeline',
-    roles: ['admin', 'manager', 'executive'] },
+    roles: ['admin', 'manager', 'executive', 'super_admin'] },
   { icon: CheckSquare,     label: 'Tasks',     path: '/tasks',
-    roles: ['admin', 'manager', 'executive'] },
+    roles: ['admin', 'manager', 'executive', 'super_admin'] },
   { icon: Building2,       label: 'Projects',  path: '/projects',
-    roles: ['admin', 'manager'] },
+    roles: ['admin', 'manager', 'super_admin'] },
   { icon: UserCircle2,     label: 'Team',      path: '/team',
-    roles: ['admin', 'manager'] },
+    roles: ['admin', 'manager', 'super_admin'] },
   { icon: Settings,        label: 'Settings',  path: '/settings',
-    roles: ['admin'] },
+    roles: ['admin', 'super_admin'] },
 ];
 
 const COMING_SOON = [
@@ -33,7 +36,7 @@ const COMING_SOON = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, signOut } = useAuth();
+  const { user, isSuperAdmin, signOut, assignedStats } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -44,7 +47,7 @@ export default function Sidebar({ isOpen, onClose }) {
   };
 
   const filteredNav = NAV_ITEMS.filter(
-    item => !user?.role || item.roles.includes(user.role)
+    item => isSuperAdmin || !user?.role || item.roles.includes(user.role)
   );
 
   return (
@@ -124,7 +127,7 @@ export default function Sidebar({ isOpen, onClose }) {
           Navigation
         </div>
         <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-          {filteredNav.map(({ icon: Icon, label, path }) => (
+          {filteredNav.map(({ icon: Icon, label, path, isAssignedTab }) => (
             <li key={path}>
               <NavLink
                 to={path}
@@ -133,9 +136,65 @@ export default function Sidebar({ isOpen, onClose }) {
                 className={({ isActive }) =>
                   `sidebar-nav-link${isActive ? ' active' : ''}`
                 }
+                style={{ position: 'relative' }}
               >
-                <Icon size={16} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Icon size={16} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                  {isAssignedTab && assignedStats?.hasPendingAlert && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: -3,
+                        right: -3,
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        background: 'var(--color-danger)',
+                        boxShadow: '0 0 6px rgba(239,68,68,0.8)',
+                        animation: 'pulse 1.5s infinite',
+                      }}
+                    />
+                  )}
+                </div>
                 <span className="sidebar-nav-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>
+
+                {/* Red dot badge counter for Assigned tab */}
+                {isAssignedTab && (
+                  assignedStats?.hasPendingAlert ? (
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        background: 'var(--color-danger)',
+                        color: 'white',
+                        fontSize: '0.62rem',
+                        fontWeight: 800,
+                        padding: '0.1rem 0.45rem',
+                        borderRadius: '999px',
+                        lineHeight: 1,
+                        boxShadow: '0 0 8px rgba(239,68,68,0.4)',
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      {assignedStats.unreadAssignmentNotifs || assignedStats.newAssignedCount}
+                    </span>
+                  ) : assignedStats?.assignedToMeCount > 0 ? (
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        background: 'var(--color-surface-2)',
+                        color: 'var(--text-muted)',
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        padding: '0.1rem 0.4rem',
+                        borderRadius: '999px',
+                        lineHeight: 1,
+                        border: '1px solid var(--color-border)',
+                      }}
+                    >
+                      {assignedStats.assignedToMeCount}
+                    </span>
+                  ) : null
+                )}
               </NavLink>
             </li>
           ))}

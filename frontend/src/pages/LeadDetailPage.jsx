@@ -19,7 +19,7 @@ import toast from 'react-hot-toast';
 export default function LeadDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, canManageTeam } = useAuth();
+  const { user, canManageTeam, refreshAssignedStats } = useAuth();
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState('');
@@ -46,11 +46,9 @@ export default function LeadDetailPage() {
 
   useEffect(() => {
     loadLead();
-    if (canManageTeam) {
-      teamAPI.list().then(r => setExecutives(r.data?.filter(u => u.role === 'executive') || [])).catch(() => {});
-    }
+    teamAPI.list().then(r => setExecutives((r.data || []).filter(u => u.status === 'active'))).catch(() => {});
     projectsAPI.list().then(r => setProjects(r.data || [])).catch(() => {});
-  }, [loadLead, canManageTeam]);
+  }, [loadLead]);
 
   const handleStageChange = async (newStage) => {
     if (newStage === 'Lost / Dropped') {
@@ -89,8 +87,10 @@ export default function LeadDetailPage() {
   const handleReassign = async (toUserId) => {
     try {
       await leadsAPI.reassign(id, toUserId);
-      toast.success('Lead reassigned');
+      const target = executives.find(e => e.id === toUserId);
+      toast.success(`Lead reassigned to ${target?.name || 'team member'}`);
       loadLead();
+      if (refreshAssignedStats) refreshAssignedStats();
     } catch { toast.error('Reassign failed'); }
   };
 
@@ -356,17 +356,17 @@ export default function LeadDetailPage() {
                 <AlertTriangle size={14} strokeWidth={1.75} /> Unassigned
               </span>
             )}
-            {canManageTeam && executives.length > 0 && (
+            {executives.length > 0 && (
               <div style={{ marginTop: '0.75rem' }}>
                 <select
                   className="form-select"
                   onChange={e => e.target.value && handleReassign(e.target.value)}
-                  defaultValue=""
+                  value={lead.assigned_to || ''}
                   style={{ fontSize: '0.8rem' }}
                 >
-                  <option value="">Reassign to...</option>
+                  <option value="">{lead.assigned_to ? 'Transfer / Reassign to...' : 'Assign to...'}</option>
                   {executives.map(e => (
-                    <option key={e.id} value={e.id}>{e.name} ({e.current_lead_count || 0} leads)</option>
+                    <option key={e.id} value={e.id}>{e.name} ({e.current_lead_count || 0} leads) {e.id === user?.id ? '(You)' : ''}</option>
                   ))}
                 </select>
               </div>

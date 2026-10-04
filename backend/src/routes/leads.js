@@ -3,7 +3,7 @@ const multer = require('multer');
 const { body, query, validationResult } = require('express-validator');
 const { supabaseAdmin } = require('../supabaseAdmin');
 const { authenticate } = require('../middleware/auth');
-const { requireRole } = require('../middleware/rbac');
+const { requireRole, requireSuperAdmin, isSuperAdmin } = require('../middleware/rbac');
 const { autoAssignLead, reassignLead } = require('../services/autoAssign');
 const { importCSV } = require('../services/csvImport');
 const { updateLeadScore, calculateLeadScore } = require('../services/leadScore');
@@ -47,7 +47,11 @@ router.get('/', async (req, res) => {
     if (stage) queryBuilder = queryBuilder.eq('stage', stage);
     if (source) queryBuilder = queryBuilder.eq('source', source);
     if (priority) queryBuilder = queryBuilder.eq('priority', priority);
-    if (assigned_to && userRole !== 'executive') {
+    if (assigned_to === 'unassigned') {
+      queryBuilder = queryBuilder.is('assigned_to', null);
+    } else if (assigned_to === 'me') {
+      queryBuilder = queryBuilder.eq('assigned_to', user.id);
+    } else if (assigned_to && userRole !== 'executive') {
       queryBuilder = queryBuilder.eq('assigned_to', assigned_to);
     }
     if (project_id) queryBuilder = queryBuilder.eq('project_id', project_id);
@@ -79,6 +83,111 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error('[GET /leads]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/leads/assigned-stats ──────────────────────────────────────────
+// Summary of assigned leads & notification alert status for logged in user & team
+router.get('/assigned-stats', async (req, res) => {
+  try {
+    const { user, orgId } = req;
+
+    // 1. Leads currently assigned to me
+    const { count: assignedToMeCount } = await supabaseAdmin
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .eq('assigned_to', user.id);
+
+    // 2. Unread assignment notifications
+    const { count: unreadAssignmentNotifs } = await supabaseAdmin
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .eq('user_id', user.id)
+      .eq('type', 'lead_assigned')
+      .eq('read_status', false);
+
+    // 3. New uncontacted leads assigned to me
+    const { count: newAssignedCount } = await supabaseAdmin
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .eq('assigned_to', user.id)
+      .eq('stage', 'New / Unassigned');
+
+    // 4. Unassigned leads waiting for pickup
+    const { count: unassignedCount } = await supabaseAdmin
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .is('assigned_to', null);
+
+    // 5. Total leads in org
+    const { count: totalLeadsCount } = await supabaseAdmin
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId);
+
+    // 6. Active team members with lead counts
+    const { data: teamMembers } = await supabaseAdmin
+      .from('users')
+      .select('id, name, email, role, current_lead_count, status')
+      .eq('org_id', orgId)
+      .eq('status', 'active')
+      .order('name');
+
+    res.json({
+      assignedToMeCount: assignedToMeCount || 0,
+      unreadAssignmentNotifs: unreadAssignmentNotifs || 0,
+      newAssignedCount: newAssignedCount || 0,
+      unassignedCount: unassignedCount || 0,
+      totalLeadsCount: totalLeadsCount || 0,
+      hasPendingAlert: (unreadAssignmentNotifs || 0) > 0 || (newAssignedCount || 0) > 0,
+      teamMembers: teamMembers || [],
+    });
+  } catch (err) {
+    console.error('[GET /leads/assigned-stats]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/leads/export-excel-data ───────────────────────────────────────
+// STRICT RBAC: Super Admin (Founders) ONLY. Regular Admin cannot download this!
+router.get('/export-excel-data', requireSuperAdmin, async (req, res) => {
+  try {
+    const { orgId } = req;
+    const { stage, priority, source, assigned_to, search } = req.query;
+
+    let queryBuilder = supabaseAdmin
+      .from('leads')
+      .select(`
+        *,
+        project:projects(id, name, location, developer_name),
+        assignee:users!leads_assigned_to_fkey(id, name, email, phone)
+      `)
+      .eq('org_id', orgId)
+      .order('created_at', { ascending: false });
+
+    if (stage) queryBuilder = queryBuilder.eq('stage', stage);
+    if (priority) queryBuilder = queryBuilder.eq('priority', priority);
+    if (source) queryBuilder = queryBuilder.eq('source', source);
+    if (assigned_to === 'unassigned') queryBuilder = queryBuilder.is('assigned_to', null);
+    else if (assigned_to) queryBuilder = queryBuilder.eq('assigned_to', assigned_to);
+    if (search) {
+      queryBuilder = queryBuilder.or(`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
+    }
+
+    const { data: leads, error } = await queryBuilder;
+    if (error) throw error;
+
+    res.json({
+      leads: leads || [],
+      total: (leads || []).length,
+    });
+  } catch (err) {
+    console.error('[GET /leads/export-excel-data]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -248,7 +357,8 @@ router.put('/:id', async (req, res) => {
 });
 
 // ── POST /api/leads/:id/reassign ───────────────────────────────────────────
-router.post('/:id/reassign', requireRole(['admin', 'manager']), async (req, res) => {
+// Any active user working in the portal can assign/reassign leads to team members
+router.post('/:id/reassign', requireRole(['admin', 'manager', 'executive', 'super_admin']), async (req, res) => {
   try {
     const { to_user_id } = req.body;
     if (!to_user_id) return res.status(400).json({ error: 'to_user_id is required' });
@@ -314,8 +424,8 @@ router.post('/import/csv', requireRole(['admin', 'manager']), upload.single('fil
 });
 
 // ── POST /api/leads/bulk ────────────────────────────────────────────────────
-// Bulk actions: reassign, change stage, export
-router.post('/bulk', requireRole(['admin', 'manager']), async (req, res) => {
+// Bulk actions: reassign, change stage, delete
+router.post('/bulk', requireRole(['admin', 'manager', 'executive', 'super_admin']), async (req, res) => {
   try {
     const { action, lead_ids, payload } = req.body;
     if (!action || !lead_ids?.length) {
@@ -334,8 +444,8 @@ router.post('/bulk', requireRole(['admin', 'manager']), async (req, res) => {
         return res.json({ message: `${lead_ids.length} leads updated` });
       }
       case 'delete': {
-        if (!['admin'].includes(req.userRole)) {
-          return res.status(403).json({ error: 'Only admin can bulk delete' });
+        if (!isSuperAdmin(req.user) && req.userRole !== 'admin') {
+          return res.status(403).json({ error: 'Only super admin or admin can bulk delete' });
         }
         await supabaseAdmin.from('leads').delete().in('id', lead_ids);
         return res.json({ message: `${lead_ids.length} leads deleted` });

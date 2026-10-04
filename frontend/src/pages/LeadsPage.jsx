@@ -8,11 +8,13 @@ import {
   Download, Upload, SlidersHorizontal, Search, Pencil,
   Plus, Users, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown,
   Phone, MessageSquare, Flame, CheckCircle, Clock, ChevronRight, Building2,
+  FileSpreadsheet, UserCheck, ArrowRightLeft,
 } from 'lucide-react';
 import LeadForm from '../components/leads/LeadForm';
 import LeadFilters from '../components/leads/LeadFilters';
 import CSVImportModal from '../components/common/CSVImportModal';
 import Pagination from '../components/common/Pagination';
+import { exportLeadsToExcel } from '../utils/excelExport';
 import toast from 'react-hot-toast';
 
 export function WhatsAppIcon({ size = 15, ...props }) {
@@ -32,7 +34,7 @@ export function WhatsAppIcon({ size = 15, ...props }) {
 }
 
 export default function LeadsPage() {
-  const { user, canViewAllLeads, canManageTeam } = useAuth();
+  const { user, isSuperAdmin, canViewAllLeads, canManageTeam, refreshAssignedStats } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -48,6 +50,7 @@ export default function LeadsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activePreset, setActivePreset] = useState('all');
+  const [exportingExcel, setExportingExcel] = useState(false);
   const [filters, setFilters] = useState({
     stage: '', source: '', priority: '', assigned_to: '',
     project_id: '', sla_breach: '', date_from: '', date_to: '',
@@ -78,9 +81,10 @@ export default function LeadsPage() {
   useEffect(() => { loadLeads(); }, [loadLeads]);
 
   useEffect(() => {
-    if (canManageTeam) teamAPI.list().then(r => setExecutives(r.data?.filter(u => u.role === 'executive') || [])).catch(() => {});
+    // Load all active team members for assignment
+    teamAPI.list().then(r => setExecutives((r.data || []).filter(u => u.status === 'active'))).catch(() => {});
     projectsAPI.list().then(r => setProjects(r.data || [])).catch(() => {});
-  }, [canManageTeam]);
+  }, []);
 
   const applyPreset = (presetKey) => {
     setActivePreset(presetKey);
@@ -116,28 +120,58 @@ export default function LeadsPage() {
   };
 
   const handleBulkReassign = async () => {
-    const toUserId = prompt('Enter executive ID to reassign to:');
-    if (!toUserId) return;
+    if (!executives.length) {
+      toast.error('No team members found to reassign to');
+      return;
+    }
+    const targetUserId = prompt(
+      `Enter target team member ID or Name:\n\nAvailable team members:\n` +
+      executives.map(e => `• ${e.name}: ${e.id}`).join('\n')
+    );
+    if (!targetUserId) return;
+    
+    // Resolve by ID or name
+    const found = executives.find(e => e.id === targetUserId.trim() || e.name.toLowerCase() === targetUserId.trim().toLowerCase());
+    const finalId = found ? found.id : targetUserId.trim();
+
     try {
-      await leadsAPI.bulk('reassign', [...selectedLeads], { to_user_id: toUserId });
-      toast.success(`${selectedLeads.size} leads reassigned`);
+      await leadsAPI.bulk('reassign', [...selectedLeads], { to_user_id: finalId });
+      toast.success(`${selectedLeads.size} leads reassigned to ${found?.name || 'team member'}`);
       setSelectedLeads(new Set());
       loadLeads();
+      refreshAssignedStats();
     } catch (err) {
       toast.error('Bulk reassign failed');
     }
   };
 
-  const handleExport = () => {
-    const data = leads.map(l => ({
-      Name: l.name, Phone: l.phone, Email: l.email,
-      Source: l.source, Stage: l.stage, Priority: l.priority,
-      Project: l.project?.name, Assignee: l.assignee?.name,
-      Budget: `${l.budget_min || ''} - ${l.budget_max || ''}`,
-      Created: new Date(l.created_at).toLocaleDateString('en-IN'),
-    }));
-    downloadCSV(data, 'ghar-leads-export.csv');
-    toast.success('Leads exported');
+  // ── SUPER ADMIN ONLY: Download leads as Microsoft Excel (.xlsx) sheet ────
+  const handleDownloadExcel = async () => {
+    if (!isSuperAdmin) {
+      toast.error('Access Denied: Only Super Admins (Founders) can download Excel sheets.');
+      return;
+    }
+
+    setExportingExcel(true);
+    const toastId = toast.loading('Generating Excel sheet...');
+    try {
+      const activeFilters = Object.fromEntries(Object.entries(filters).filter(([,v]) => v));
+      if (searchTerm) activeFilters.search = searchTerm;
+
+      // Fetch complete unpaginated dataset from Super Admin export endpoint
+      const { data } = await leadsAPI.getExportData(activeFilters);
+      const leadsToExport = data.leads?.length ? data.leads : leads;
+
+      const dateStr = new Date().toISOString().split('T')[0];
+      exportLeadsToExcel(leadsToExport, `GHAR_Leads_Report_${dateStr}.xlsx`);
+      toast.dismiss(toastId);
+      toast.success(`Excel sheet downloaded successfully (${leadsToExport.length} leads)`);
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error(err.response?.data?.error || 'Failed to download Excel sheet');
+    } finally {
+      setExportingExcel(false);
+    }
   };
 
   const toggleSelect = (id) => {
@@ -190,9 +224,26 @@ export default function LeadsPage() {
               <Download size={13} strokeWidth={2} /> Bulk Import
             </button>
           )}
-          <button onClick={handleExport} className="btn btn-secondary btn-sm">
-            <Upload size={13} strokeWidth={2} /> Export CSV
-          </button>
+
+          {/* Super Admin ONLY: Excel Sheet Download (Admins cannot see or download) */}
+          {isSuperAdmin && (
+            <button
+              onClick={handleDownloadExcel}
+              disabled={exportingExcel}
+              className="btn btn-secondary btn-sm"
+              style={{
+                borderColor: 'var(--color-primary)',
+                color: 'var(--color-primary)',
+                gap: '0.35rem',
+                fontWeight: 600,
+              }}
+              title="Download Excel (.xlsx) sheet of leads (Super Admin only)"
+            >
+              <FileSpreadsheet size={14} strokeWidth={2} />
+              {exportingExcel ? 'Exporting...' : 'Download XL'}
+            </button>
+          )}
+
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="btn btn-secondary btn-sm"
@@ -417,13 +468,51 @@ export default function LeadsPage() {
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{lead.configuration || 'Any Config'}{lead.project?.name ? ` · ${lead.project.name}` : ''}</div>
                     </td>
                     {canViewAllLeads && (
-                      <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        {lead.assignee ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                            <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: 'white' }}>{getInitials(lead.assignee.name)}</div>
-                            <span style={{ fontWeight: 500 }}>{lead.assignee.name}</span>
-                          </div>
-                        ) : <span style={{ color: 'var(--color-warning)', fontSize: '0.75rem', fontWeight: 600 }}>Unassigned</span>}
+                      <td onClick={e => e.stopPropagation()} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          {lead.assignee ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.58rem', fontWeight: 700, color: 'white' }}>{getInitials(lead.assignee.name)}</div>
+                              <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>{lead.assignee.name}</span>
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--color-warning)', fontSize: '0.72rem', fontWeight: 600 }}>Unassigned</span>
+                          )}
+
+                          {/* Quick inline reassignment dropdown */}
+                          <select
+                            className="form-select"
+                            value={lead.assigned_to || ''}
+                            onChange={async (e) => {
+                              const toId = e.target.value;
+                              if (!toId) return;
+                              try {
+                                await leadsAPI.reassign(lead.id, toId);
+                                const target = executives.find(x => x.id === toId);
+                                toast.success(`Assigned to ${target?.name || 'team member'}`);
+                                loadLeads();
+                                refreshAssignedStats();
+                              } catch {
+                                toast.error('Reassignment failed');
+                              }
+                            }}
+                            style={{
+                              fontSize: '0.68rem',
+                              height: 24,
+                              padding: '0 0.35rem',
+                              minWidth: 120,
+                              background: 'var(--color-surface-2)',
+                            }}
+                            title="Reassign lead to another team member"
+                          >
+                            <option value="">{lead.assigned_to ? 'Transfer...' : 'Assign...'}</option>
+                            {executives.map(e => (
+                              <option key={e.id} value={e.id}>
+                                {e.name} ({e.current_lead_count || 0})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </td>
                     )}
                     <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>

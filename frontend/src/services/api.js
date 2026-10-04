@@ -41,6 +41,8 @@ export const leadsAPI = {
   addActivity: (id, data) => api.post(`/leads/${id}/activity`, data),
   importCSV: (formData) => api.post('/leads/import/csv', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   bulk: (action, leadIds, payload) => api.post('/leads/bulk', { action, lead_ids: leadIds, payload }),
+  getAssignedStats: () => api.get('/leads/assigned-stats'),
+  getExportData: (params) => api.get('/leads/export-excel-data', { params }),
 };
 
 // ── Tasks ──────────────────────────────────────────────────────────────────
