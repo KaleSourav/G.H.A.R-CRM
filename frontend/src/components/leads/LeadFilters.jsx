@@ -9,7 +9,7 @@ export default function LeadFilters({ filters, onChange, onReset, executives, pr
         <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Filters</span>
         {isActive && <button onClick={onReset} className="btn btn-ghost btn-sm" style={{ fontSize: '0.75rem', color: 'var(--color-danger)' }}>Clear All</button>}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
         <div className="form-group">
           <label className="form-label">Stage</label>
           <select className="form-select" value={filters.stage} onChange={e => onChange('stage', e.target.value)}>

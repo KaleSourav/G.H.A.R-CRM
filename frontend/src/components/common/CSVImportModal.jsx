@@ -47,6 +47,7 @@ export default function CSVImportModal({ onClose, onImported }) {
   return (
     <div className="modal-overlay">
       <div className="modal">
+        <div className="modal-sheet-handle" />
         <div className="modal-header">
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Import Leads via CSV</h2>
           <button onClick={onClose} className="btn btn-ghost btn-icon"><X size={18} strokeWidth={1.75} /></button>
@@ -62,7 +63,7 @@ export default function CSVImportModal({ onClose, onImported }) {
                 }
               </div>
               <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Import Complete</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+              <div className="form-grid-3" style={{ marginTop: '1rem' }}>
                 {[
                   { label: 'Imported', value: result.imported, color: 'var(--color-success)' },
                   { label: 'Duplicates', value: result.duplicates, color: 'var(--color-warning)' },

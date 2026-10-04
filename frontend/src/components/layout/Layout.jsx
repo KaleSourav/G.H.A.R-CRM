@@ -38,7 +38,9 @@ export default function Layout() {
           onClick={() => setSidebarOpen(false)}
           style={{
             position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'rgba(4, 8, 16, 0.72)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             zIndex: 199,
           }}
           className="mobile-overlay"
@@ -52,10 +54,10 @@ export default function Layout() {
         width: 0,          /* flex child — grows via flex:1 but won't push past container */
         overflowX: 'hidden',
         marginLeft: 'var(--sidebar-width)',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'margin-left 200ms ease',
+        transition: 'margin-left 220ms cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
         <Topbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
@@ -83,25 +85,24 @@ export default function Layout() {
               `bottom-nav-item${isActive ? ' active' : ''}`
             }
           >
-            <Icon size={20} strokeWidth={1.75} />
+            <Icon size={20} strokeWidth={1.8} />
             <span>{label}</span>
           </NavLink>
         ))}
-        {/* More button for admin/manager extra pages */}
-        {['admin', 'manager'].includes(user?.role) && (
-          <button
-            className="bottom-nav-item"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <MoreHorizontal size={20} strokeWidth={1.75} />
-            <span>More</span>
-          </button>
-        )}
+        {/* Menu / More button for all roles on mobile */}
+        <button
+          className={`bottom-nav-item${sidebarOpen ? ' active' : ''}`}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle navigation menu"
+        >
+          <MoreHorizontal size={20} strokeWidth={1.8} />
+          <span>Menu</span>
+        </button>
       </nav>
 
       <style>{`
         @media (max-width: 768px) {
-          .mobile-overlay { display: block; }
+          .mobile-overlay { display: block; animation: fadeIn 200ms ease; }
         }
         @media (min-width: 769px) {
           .mobile-overlay { display: none; }

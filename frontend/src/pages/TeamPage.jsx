@@ -129,12 +129,13 @@ export default function TeamPage() {
       {showForm && (
         <div className="modal-overlay">
           <div className="modal">
+            <div className="modal-sheet-handle" />
             <div className="modal-header">
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Add Team Member</h2>
               <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-icon"><X size={18} strokeWidth={1.75} /></button>
             </div>
             <form onSubmit={handleCreate}>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="modal-body form-grid-2">
                 <div className="form-group" style={{ gridColumn: '1/-1' }}>
                   <label className="form-label">Full Name *</label>
                   <input className="form-input" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} required placeholder="Priya Sharma" />

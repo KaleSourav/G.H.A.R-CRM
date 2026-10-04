@@ -36,8 +36,8 @@ export default function LeadCapturePage() {
   if (submitted) {
     return (
       <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--color-bg)', padding: '1.5rem',
+        minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--color-bg)', padding: '1.5rem 1rem',
       }}>
         <div style={{
           textAlign: 'center', maxWidth: 400, padding: '3rem 2rem',
@@ -77,8 +77,8 @@ export default function LeadCapturePage() {
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--color-bg)', padding: '1.5rem',
+      minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'var(--color-bg)', padding: '1.5rem 1rem',
     }}>
       <div style={{
         width: '100%', maxWidth: 480,
@@ -92,7 +92,7 @@ export default function LeadCapturePage() {
         {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          padding: '2rem',
+          padding: '2rem 1.5rem',
           borderBottom: '1px solid var(--color-border)',
           textAlign: 'center',
           position: 'relative',
@@ -114,8 +114,8 @@ export default function LeadCapturePage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="form-grid-2">
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
               <label className="form-label" htmlFor="cap-name">Full Name *</label>
               <input

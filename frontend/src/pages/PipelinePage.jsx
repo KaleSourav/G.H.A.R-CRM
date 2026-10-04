@@ -14,7 +14,7 @@ import { WhatsAppIcon } from './LeadsPage';
 import toast from 'react-hot-toast';
 
 // ── Kanban Column ─────────────────────────────────────────────────────────
-function KanbanColumn({ stage, leads, onDropLead, onLeadClick }) {
+function KanbanColumn({ stage, leads, onDropLead, onLeadClick, onMoveStage, isVisibleOnMobile }) {
   const { color } = STAGE_CONFIG[stage] || {};
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -36,7 +36,7 @@ function KanbanColumn({ stage, leads, onDropLead, onLeadClick }) {
 
   return (
     <div
-      className="kanban-column"
+      className={`kanban-column ${isVisibleOnMobile ? 'mobile-visible' : 'mobile-hidden'}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -49,13 +49,13 @@ function KanbanColumn({ stage, leads, onDropLead, onLeadClick }) {
       <div className="kanban-column-header" style={{ borderTop: `3px solid ${color || 'var(--color-primary)'}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: color || '#64748B', flexShrink: 0 }} />
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: color || '#64748B', flexShrink: 0 }} />
+            <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               {STAGE_CONFIG[stage]?.short || stage}
             </span>
           </div>
           <span style={{
-            fontSize: '0.7rem', fontWeight: 800, padding: '0.15rem 0.5rem',
+            fontSize: '0.72rem', fontWeight: 800, padding: '0.15rem 0.55rem',
             background: 'var(--color-surface-2)', borderRadius: 'var(--radius-full)',
             color: 'var(--text-primary)', border: '1px solid var(--color-border)',
           }}>
@@ -64,7 +64,7 @@ function KanbanColumn({ stage, leads, onDropLead, onLeadClick }) {
         </div>
 
         {columnTotalValue > 0 && (
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontWeight: 500 }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontWeight: 500 }}>
             Volume: <strong style={{ color: 'var(--color-primary)' }}>{formatCurrency(columnTotalValue)}</strong>
           </div>
         )}
@@ -81,8 +81,22 @@ function KanbanColumn({ stage, leads, onDropLead, onLeadClick }) {
             Drop to move stage
           </div>
         )}
+        {leads.length === 0 && !isDragOver && (
+          <div style={{
+            padding: '1.5rem 1rem',
+            textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)',
+            fontStyle: 'italic',
+          }}>
+            No leads in this stage
+          </div>
+        )}
         {leads.map(lead => (
-          <KanbanCard key={lead.id} lead={lead} onClick={() => onLeadClick(lead.id)} />
+          <KanbanCard
+            key={lead.id}
+            lead={lead}
+            onClick={() => onLeadClick(lead.id)}
+            onMoveStage={onMoveStage}
+          />
         ))}
       </div>
     </div>
@@ -90,7 +104,7 @@ function KanbanColumn({ stage, leads, onDropLead, onLeadClick }) {
 }
 
 // ── Kanban Card ───────────────────────────────────────────────────────────
-function KanbanCard({ lead, onClick }) {
+function KanbanCard({ lead, onClick, onMoveStage }) {
   const handleDragStart = (e) => {
     e.dataTransfer.setData('leadId', lead.id);
     e.currentTarget.style.opacity = '0.5';
@@ -112,75 +126,118 @@ function KanbanCard({ lead, onClick }) {
       {/* Lead info */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.45rem' }}>
         <div style={{
-          width: 30, height: 30, borderRadius: '50%',
+          width: 32, height: 32, borderRadius: '50%',
           background: 'linear-gradient(135deg, #4F6FE8, #7C3AED)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.68rem', fontWeight: 800, color: 'white', flexShrink: 0,
+          fontSize: '0.7rem', fontWeight: 800, color: 'white', flexShrink: 0,
         }}>
           {getInitials(lead.name)}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {lead.name}
           </div>
           {lead.project?.name && (
-            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {lead.project.name}
             </div>
           )}
         </div>
-        <span className={`score-badge ${scoreClass}`} style={{ fontSize: '0.62rem', padding: '0.1rem 0.4rem' }}>
+        <span className={`score-badge ${scoreClass}`} style={{ fontSize: '0.64rem', padding: '0.12rem 0.45rem' }}>
           {lead.lead_score || 0}
         </span>
       </div>
 
-      {/* Contact info & Quick WhatsApp */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.45rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-          <Phone size={11} strokeWidth={1.75} color="var(--color-info)" style={{ flexShrink: 0 }} />
-          <span>{formatPhone(lead.phone)}</span>
-        </div>
+      {/* Contact info & Quick WhatsApp / Call */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.45rem' }}>
         <a
-          href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
-          target="_blank"
-          rel="noreferrer"
+          href={`tel:${lead.phone}`}
           onClick={e => e.stopPropagation()}
-          title={`Chat with ${lead.name} on WhatsApp`}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 20,
-            height: 20,
-            borderRadius: '50%',
-            background: 'rgba(37, 211, 102, 0.14)',
-            border: '1px solid rgba(37, 211, 102, 0.35)',
-            color: '#25D366',
-            flexShrink: 0,
-          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--color-info)', fontWeight: 500 }}
         >
-          <WhatsAppIcon size={11} />
+          <Phone size={12} strokeWidth={2} color="var(--color-info)" style={{ flexShrink: 0 }} />
+          <span>{formatPhone(lead.phone)}</span>
         </a>
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+          <a
+            href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
+            target="_blank"
+            rel="noreferrer"
+            title={`Chat with ${lead.name} on WhatsApp`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 26,
+              height: 26,
+              borderRadius: '50%',
+              background: 'rgba(37, 211, 102, 0.14)',
+              border: '1px solid rgba(37, 211, 102, 0.35)',
+              color: '#25D366',
+              flexShrink: 0,
+            }}
+          >
+            <WhatsAppIcon size={13} />
+          </a>
+        </div>
       </div>
 
       {/* Budget & Config */}
       {(lead.budget_max || lead.configuration) && (
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.3rem',
+          display: 'flex', alignItems: 'center', gap: '0.35rem',
           fontSize: '0.72rem', fontWeight: 600, color: 'var(--color-primary)',
           background: 'var(--color-primary-dim)', padding: '0.2rem 0.5rem',
           borderRadius: 'var(--radius-sm)', marginBottom: '0.45rem', width: 'fit-content',
         }}>
           {lead.budget_max && <span>{formatCurrency(lead.budget_max)}</span>}
-          {lead.configuration && <span style={{ opacity: 0.8 }}>· {lead.configuration}</span>}
+          {lead.configuration && <span style={{ opacity: 0.85 }}>· {lead.configuration}</span>}
         </div>
       )}
+
+      {/* Move Stage Selector (touch-friendly mobile stage mover) */}
+      <div
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          paddingTop: '0.45rem', marginTop: '0.35rem',
+          borderTop: '1px solid var(--color-border-light)',
+          gap: '0.5rem',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          Move:
+        </span>
+        <select
+          value={lead.stage}
+          onChange={(e) => onMoveStage(lead.id, e.target.value)}
+          aria-label="Change stage"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            fontSize: '0.72rem',
+            fontWeight: 500,
+            padding: '0.2rem 1.4rem 0.2rem 0.5rem',
+            height: 28,
+            minHeight: 28,
+            background: 'var(--color-surface)',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+          className="form-select"
+        >
+          {PIPELINE_STAGES.map(s => (
+            <option key={s} value={s}>{STAGE_CONFIG[s]?.short || s}</option>
+          ))}
+        </select>
+      </div>
 
       {/* Card Footer */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderTop: '1px solid var(--color-border-light)',
-        paddingTop: '0.45rem', marginTop: '0.2rem',
+        paddingTop: '0.35rem', marginTop: '0.2rem',
       }}>
         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
           {formatRelative(lead.last_activity_at)}
@@ -193,10 +250,10 @@ function KanbanCard({ lead, onClick }) {
           )}
           {lead.assignee && (
             <div title={`Assigned to ${lead.assignee.name}`} style={{
-              width: 20, height: 20, borderRadius: '50%',
+              width: 22, height: 22, borderRadius: '50%',
               background: 'linear-gradient(135deg, #10B981, #059669)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.55rem', fontWeight: 700, color: 'white',
+              fontSize: '0.58rem', fontWeight: 700, color: 'white',
             }}>
               {getInitials(lead.assignee.name)}
             </div>
@@ -218,6 +275,7 @@ export default function PipelinePage() {
   const [pendingDrop, setPendingDrop] = useState(null);
   const [filterProject, setFilterProject] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
+  const [activeMobileStage, setActiveMobileStage] = useState('ALL');
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -341,25 +399,68 @@ export default function PipelinePage() {
         </div>
       </div>
 
-      {/* ── Stage Volume Summary Ribbon ─────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '0.625rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-        {['New / Unassigned', 'Contacted', 'Qualified', 'Site Visit Scheduled', 'Booking', 'Sold / Closed Won'].map(stage => {
+      {/* ── Interactive Stage Volume Filter Ribbon (Mobile & Desktop) ─── */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        overflowX: 'auto',
+        paddingBottom: '0.4rem',
+        WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'none',
+      }}>
+        {/* All Stages Pill */}
+        <button
+          onClick={() => setActiveMobileStage('ALL')}
+          style={{
+            padding: '0.45rem 0.85rem',
+            background: activeMobileStage === 'ALL' ? 'var(--color-primary-dim)' : 'var(--color-surface)',
+            border: `1px solid ${activeMobileStage === 'ALL' ? 'var(--color-primary)' : 'var(--color-border)'}`,
+            borderRadius: 'var(--radius-full)',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: activeMobileStage === 'ALL' ? 'var(--color-primary)' : 'var(--text-secondary)',
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            whiteSpace: 'nowrap',
+            cursor: 'pointer',
+            transition: 'all 150ms',
+            flexShrink: 0,
+            minHeight: 34,
+          }}
+        >
+          <span>All Stages</span>
+          <strong style={{ color: activeMobileStage === 'ALL' ? 'var(--color-primary)' : 'var(--text-primary)' }}>
+            {filteredLeads.length}
+          </strong>
+        </button>
+
+        {PIPELINE_STAGES.map(stage => {
           const count = byStage[stage]?.length || 0;
+          const isSelected = activeMobileStage === stage;
+          const conf = STAGE_CONFIG[stage];
           return (
-            <div key={stage} style={{
-              padding: '0.45rem 0.85rem',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-              fontSize: '0.75rem',
-              color: 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              whiteSpace: 'nowrap',
-            }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: STAGE_CONFIG[stage]?.color || '#64748B' }} />
-              <span>{STAGE_CONFIG[stage]?.short}:</span>
-              <strong style={{ color: 'var(--text-primary)' }}>{count}</strong>
-            </div>
+            <button
+              key={stage}
+              onClick={() => setActiveMobileStage(isSelected ? 'ALL' : stage)}
+              style={{
+                padding: '0.45rem 0.85rem',
+                background: isSelected ? `${conf?.color || 'var(--color-primary)'}22` : 'var(--color-surface)',
+                border: `1px solid ${isSelected ? conf?.color || 'var(--color-primary)' : 'var(--color-border)'}`,
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.75rem',
+                fontWeight: isSelected ? 700 : 500,
+                color: isSelected ? (conf?.color || 'var(--color-primary)') : 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', gap: '0.45rem',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                transition: 'all 150ms',
+                flexShrink: 0,
+                minHeight: 34,
+              }}
+            >
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: conf?.color || '#64748B' }} />
+              <span>{conf?.short || stage}:</span>
+              <strong style={{ color: isSelected ? conf?.color : 'var(--text-primary)' }}>{count}</strong>
+            </button>
           );
         })}
       </div>
@@ -378,6 +479,8 @@ export default function PipelinePage() {
               leads={byStage[stage] || []}
               onDropLead={handleDropLead}
               onLeadClick={(id) => navigate(`/leads/${id}`)}
+              onMoveStage={handleDropLead}
+              isVisibleOnMobile={activeMobileStage === 'ALL' || activeMobileStage === stage}
             />
           ))}
         </div>
@@ -389,6 +492,27 @@ export default function PipelinePage() {
           onCancel={() => { setShowLostModal(false); setPendingDrop(null); loadLeads(); }}
         />
       )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .kanban-board {
+            height: auto !important;
+            min-height: 55vh;
+            overflow-x: auto;
+            gap: 0.75rem !important;
+            padding-bottom: 2rem !important;
+          }
+          .kanban-column.mobile-hidden {
+            display: none !important;
+          }
+          .kanban-column.mobile-visible {
+            display: flex !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -69,16 +69,18 @@ export default function Topbar({ onMenuClick }) {
       top: 0, right: 0,
       left: 'var(--sidebar-width)',
       height: 'var(--topbar-height)',
-      background: 'rgba(13,21,38,0.90)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
+      paddingTop: 'var(--sat)',
+      background: 'rgba(13,21,38,0.92)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
       borderBottom: '1px solid var(--color-border)',
       display: 'flex',
       alignItems: 'center',
-      padding: '0 var(--content-pad)',
+      paddingLeft: 'max(var(--content-pad), var(--sal))',
+      paddingRight: 'max(var(--content-pad), var(--sar))',
       gap: '0.75rem',
       zIndex: 100,
-      transition: 'left 200ms ease',
+      transition: 'left 220ms cubic-bezier(0.16, 1, 0.3, 1)',
     }}>
 
       {/* Mobile hamburger */}
@@ -87,22 +89,50 @@ export default function Topbar({ onMenuClick }) {
         className="btn btn-ghost btn-icon"
         id="mobile-menu-btn"
         aria-label="Open menu"
-        style={{ display: 'none', flexShrink: 0 }}
+        style={{
+          display: 'none',
+          flexShrink: 0,
+          width: 38,
+          height: 38,
+          padding: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
-        <Menu size={20} strokeWidth={1.75} />
+        <Menu size={20} strokeWidth={2} />
       </button>
 
       {/* Brand / date area */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: '0.72rem',
+        <div className="topbar-date-desktop" style={{
+          fontSize: '0.74rem',
           color: 'var(--text-muted)',
-          letterSpacing: '0.04em',
+          letterSpacing: '0.03em',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
           G.H.A.R CRM &nbsp;·&nbsp; {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+        </div>
+        <div className="topbar-brand-mobile" style={{
+          display: 'none',
+          alignItems: 'center',
+          gap: '0.4rem',
+        }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            G.H.A.R
+          </span>
+          <span style={{
+            fontSize: '0.58rem',
+            fontWeight: 700,
+            background: 'var(--color-primary-dim)',
+            color: 'var(--color-primary)',
+            padding: '0.1rem 0.35rem',
+            borderRadius: '4px',
+            border: '1px solid rgba(232,160,32,0.25)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>CRM</span>
         </div>
       </div>
 
@@ -164,7 +194,7 @@ export default function Topbar({ onMenuClick }) {
                 onClick={() => setShowNotifs(false)}
                 style={{ position: 'fixed', inset: 0, zIndex: 99 }}
               />
-              <div style={{
+              <div className="notif-popover" style={{
                 position: 'absolute', top: 'calc(100% + 8px)', right: 0,
                 width: 320, maxHeight: 460,
                 background: 'var(--color-surface)',
@@ -273,6 +303,12 @@ export default function Topbar({ onMenuClick }) {
           #mobile-menu-btn { display: flex !important; }
           header { left: 0 !important; }
           .topbar-add-label { display: none; }
+          .topbar-date-desktop { display: none !important; }
+          .topbar-brand-mobile { display: flex !important; }
+          .notif-popover {
+            width: min(340px, calc(100vw - 20px)) !important;
+            right: -6px !important;
+          }
         }
       `}</style>
     </header>

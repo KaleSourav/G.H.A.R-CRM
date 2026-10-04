@@ -58,6 +58,7 @@ export default function LeadForm({ lead, projects, executives, canAssign, onClos
   return (
     <div className="modal-overlay">
       <div className="modal modal-lg">
+        <div className="modal-sheet-handle" />
         <div className="modal-header">
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{isEdit ? 'Edit Lead' : 'Add New Lead'}</h2>
           <button onClick={onClose} className="btn btn-ghost btn-icon"><svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg></button>
@@ -65,7 +66,7 @@ export default function LeadForm({ lead, projects, executives, canAssign, onClos
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-grid-2">
               {/* Contact Info */}
               <div style={{ gridColumn: '1/-1', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', paddingBottom: '0.25rem', borderBottom: '1px solid var(--color-border)' }}>Contact Info</div>
 

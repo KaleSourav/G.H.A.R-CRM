@@ -538,30 +538,57 @@ export default function LeadsPage() {
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                     {formatDate(lead.created_at)} · {formatRelative(lead.last_activity_at)}
                   </div>
-                  {/* Action buttons — always visible */}
-                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                  {/* Action buttons — instant Call & WhatsApp for mobile brokers */}
+                  <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+                    <a
+                      href={`tel:${lead.phone}`}
+                      title={`Call ${lead.name}`}
+                      style={{
+                        width: 34, height: 34, borderRadius: '50%',
+                        background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.35)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'var(--color-info)', flexShrink: 0,
+                      }}
+                    >
+                      <Phone size={14} strokeWidth={2} />
+                    </a>
                     <a
                       href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
                       target="_blank"
                       rel="noreferrer"
                       title={`WhatsApp ${lead.name}`}
-                      style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(37,211,102,0.12)', border: '1px solid rgba(37,211,102,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#25D366', flexShrink: 0 }}
+                      style={{
+                        width: 34, height: 34, borderRadius: '50%',
+                        background: 'rgba(37,211,102,0.14)', border: '1px solid rgba(37,211,102,0.38)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#25D366', flexShrink: 0,
+                      }}
                     >
-                      <WhatsAppIcon size={15} />
+                      <WhatsAppIcon size={16} />
                     </a>
                     <button
                       onClick={() => { setEditLead(lead); setShowLeadForm(true); }}
                       title="Edit"
-                      style={{ width: 32, height: 32, borderRadius: 'var(--radius)', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
+                      style={{
+                        width: 34, height: 34, borderRadius: 'var(--radius)',
+                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'var(--text-secondary)', flexShrink: 0,
+                      }}
                     >
-                      <Pencil size={13} strokeWidth={1.75} />
+                      <Pencil size={14} strokeWidth={1.75} />
                     </button>
                     <button
                       onClick={() => navigate(`/leads/${lead.id}`)}
                       title="View Details"
-                      style={{ width: 32, height: 32, borderRadius: 'var(--radius)', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', flexShrink: 0 }}
+                      style={{
+                        width: 34, height: 34, borderRadius: 'var(--radius)',
+                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'var(--text-secondary)', flexShrink: 0,
+                      }}
                     >
-                      <ChevronRight size={14} strokeWidth={2} />
+                      <ChevronRight size={15} strokeWidth={2} />
                     </button>
                   </div>
                 </div>

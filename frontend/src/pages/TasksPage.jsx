@@ -47,6 +47,7 @@ export default function TasksPage() {
   const [showForm, setShowForm] = useState(false);
   const [editTask, setEditTask] = useState(null);
   const [filterType, setFilterType] = useState('');
+  const [activeGroupFilter, setActiveGroupFilter] = useState('all');
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -153,6 +154,35 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {/* ── Mobile-Friendly Category Filter Ribbon ────────────────────────── */}
+      <div className="task-category-ribbon">
+        {[
+          { key: 'all', label: 'All Tasks', count: totalCount },
+          { key: 'overdue', label: 'Overdue', count: grouped.overdue.length, color: 'var(--color-danger)' },
+          { key: 'today', label: 'Due Today', count: grouped.today.length, color: 'var(--color-primary)' },
+          { key: 'upcoming', label: 'Upcoming', count: grouped.upcoming.length, color: 'var(--color-info)' },
+          { key: 'completed', label: 'Completed', count: grouped.completed.length, color: 'var(--color-success)' },
+        ].map(pill => {
+          const isActive = activeGroupFilter === pill.key;
+          return (
+            <button
+              key={pill.key}
+              onClick={() => setActiveGroupFilter(pill.key)}
+              className={`quick-action-pill ${isActive ? 'btn-primary' : ''}`}
+              style={isActive ? { background: 'var(--color-primary)', color: 'var(--text-inverse)', borderColor: 'var(--color-primary)' } : {}}
+            >
+              <span>{pill.label}</span>
+              <span style={{
+                background: isActive ? 'rgba(0,0,0,0.2)' : 'var(--color-surface-2)',
+                color: isActive ? 'inherit' : pill.color || 'var(--text-muted)',
+                borderRadius: 'var(--radius-full)', padding: '0.1rem 0.45rem',
+                fontSize: '0.65rem', fontWeight: 800,
+              }}>{pill.count}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Grouped Task Columns / Rows ─────────────────────────────────── */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
@@ -160,7 +190,9 @@ export default function TasksPage() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {Object.entries(TASK_GROUPS).map(([key, group]) => {
+          {Object.entries(TASK_GROUPS)
+            .filter(([key]) => activeGroupFilter === 'all' || activeGroupFilter === key)
+            .map(([key, group]) => {
             const groupTasks = grouped[key];
             const meta = TASK_GROUP_META[key];
             const GroupIcon = meta.Icon;
@@ -210,19 +242,21 @@ export default function TasksPage() {
                             opacity: task.status === 'completed' ? 0.7 : 1,
                           }}
                         >
-                          {/* Complete checkbox */}
+                          {/* Complete checkbox — enlarged touch target for phones */}
                           <button
                             onClick={() => handleComplete(task)}
+                            aria-label="Toggle Complete"
                             style={{
-                              width: 22, height: 22, flexShrink: 0,
+                              width: 28, height: 28, minWidth: 28, minHeight: 28, flexShrink: 0,
                               border: `2px solid ${task.status === 'completed' ? 'var(--color-success)' : 'var(--color-border)'}`,
-                              borderRadius: '6px',
+                              borderRadius: '7px',
                               background: task.status === 'completed' ? 'var(--color-success)' : 'transparent',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               cursor: 'pointer', color: 'white', transition: 'all 120ms',
+                              padding: 0,
                             }}
                           >
-                            {task.status === 'completed' && <Check size={13} strokeWidth={3} />}
+                            {task.status === 'completed' && <Check size={14} strokeWidth={3} />}
                           </button>
 
                           {/* Type icon */}
@@ -280,6 +314,16 @@ export default function TasksPage() {
 
                           {/* Actions */}
                           <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+                            {task.lead?.phone && (
+                              <a
+                                href={`tel:${task.lead.phone}`}
+                                title={`Call ${task.lead.name}`}
+                                className="btn btn-ghost btn-sm btn-icon"
+                                style={{ color: 'var(--color-info)', background: 'rgba(59,130,246,0.1)' }}
+                              >
+                                <Phone size={13} strokeWidth={2} />
+                              </a>
+                            )}
                             <button onClick={() => { setEditTask(task); setShowForm(true); }} className="btn btn-ghost btn-sm btn-icon" title="Edit">
                               <Pencil size={13} strokeWidth={1.75} />
                             </button>

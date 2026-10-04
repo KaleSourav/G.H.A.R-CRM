@@ -332,7 +332,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Action Items & Insights Row ──────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+      <div className="dashboard-insights-grid">
         {/* SLA Breach Urgent List */}
         {slaLeads.length > 0 && (
           <div className="card" style={{ border: '1px solid rgba(239,68,68,0.25)', background: 'radial-gradient(circle at top right, rgba(239,68,68,0.06), transparent 70%), var(--color-surface)' }}>

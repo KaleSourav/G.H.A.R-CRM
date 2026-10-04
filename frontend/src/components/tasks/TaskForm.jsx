@@ -39,6 +39,7 @@ export default function TaskForm({ task, leadId, executives, canAssign, onClose,
   return (
     <div className="modal-overlay">
       <div className="modal">
+        <div className="modal-sheet-handle" />
         <div className="modal-header">
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{isEdit ? 'Edit Task' : 'Create Task'}</h2>
           <button onClick={onClose} className="btn btn-ghost btn-icon"><X size={18} strokeWidth={1.75} /></button>
@@ -68,7 +69,7 @@ export default function TaskForm({ task, leadId, executives, canAssign, onClose,
               <input className="form-input" placeholder="e.g., Call Rajesh to confirm site visit" {...f('title')} required />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-grid-2">
               <div className="form-group">
                 <label className="form-label">Due Date & Time *</label>
                 <input className="form-input" type="datetime-local" {...f('due_date')} required />

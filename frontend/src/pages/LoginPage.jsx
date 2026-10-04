@@ -29,11 +29,11 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '1.5rem',
+      padding: '1.5rem 1rem',
       background: 'var(--color-bg)',
       position: 'relative',
     }}>
@@ -60,7 +60,7 @@ export default function LoginPage() {
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         borderRadius: '20px',
-        padding: '2.5rem',
+        padding: '2rem 1.5rem',
         boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
         position: 'relative',
         animation: 'slideUp 0.4s ease',

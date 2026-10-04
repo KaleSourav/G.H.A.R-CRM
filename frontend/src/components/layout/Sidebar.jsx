@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Kanban, CheckSquare,
   Building2, UserCircle2, Settings, LogOut,
-  Handshake, MessageSquare, Sparkles, Sun, Moon,
+  Handshake, MessageSquare, Sparkles, Sun, Moon, X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -57,41 +57,65 @@ export default function Sidebar({ isOpen, onClose }) {
       display: 'flex',
       flexDirection: 'column',
       zIndex: 200,
-      transition: 'transform 220ms ease, width 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms ease',
+      transition: 'transform 240ms cubic-bezier(0.16, 1, 0.3, 1), width 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms ease',
       overflowX: 'hidden',
     }}>
 
-      {/* Logo */}
+      {/* Logo & Mobile Close */}
       <div style={{
         padding: '1.125rem 1.25rem',
+        paddingTop: 'calc(1.125rem + var(--sat))',
         borderBottom: '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
         gap: '0.75rem',
         flexShrink: 0,
       }}>
-        <div style={{
-          width: 34, height: 34,
-          background: 'linear-gradient(135deg, #E8A020, #C8891A)',
-          borderRadius: '9px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '0.95rem',
-          fontWeight: '800',
-          color: '#080E1A',
-          flexShrink: 0,
-          boxShadow: '0 0 12px rgba(232,160,32,0.25)',
-          letterSpacing: '-0.02em',
-        }}>G</div>
-        <div className="sidebar-brand-text" style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
-          <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
-            G.H.A.R CRM
-          </div>
-          <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '0.1rem' }}>
-            Real Estate Suite
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+          <div style={{
+            width: 36, height: 36,
+            background: 'linear-gradient(135deg, #E8A020, #C8891A)',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1rem',
+            fontWeight: '800',
+            color: '#080E1A',
+            flexShrink: 0,
+            boxShadow: '0 0 16px rgba(232,160,32,0.3)',
+            letterSpacing: '-0.02em',
+          }}>G</div>
+          <div className="sidebar-brand-text" style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+              G.H.A.R CRM
+            </div>
+            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '0.1rem' }}>
+              Real Estate Suite
+            </div>
           </div>
         </div>
+
+        {/* Close Button on Mobile Drawer */}
+        <button
+          onClick={onClose}
+          className="sidebar-mobile-close-btn"
+          aria-label="Close menu"
+          style={{
+            display: 'none',
+            width: 32, height: 32,
+            alignItems: 'center', justifyContent: 'center',
+            borderRadius: 'var(--radius)',
+            background: 'var(--color-surface-2)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <X size={18} strokeWidth={2} />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -225,18 +249,23 @@ export default function Sidebar({ isOpen, onClose }) {
         @media (max-width: 768px) {
           aside.sidebar-container {
             transform: ${isOpen ? 'translateX(0)' : 'translateX(-100%)'};
-            width: 240px !important;
-            box-shadow: var(--shadow-xl);
+            width: min(290px, 84vw) !important;
+            border-radius: 0 16px 16px 0;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.75);
+            padding-bottom: max(0.875rem, var(--sab));
+          }
+          .sidebar-mobile-close-btn {
+            display: flex !important;
           }
         }
         @media (min-width: 769px) and (max-width: 1024px) {
           aside.sidebar-container {
-            width: 64px !important;
+            width: 68px !important;
             overflow-x: hidden !important;
             z-index: 250 !important;
           }
           aside.sidebar-container:hover {
-            width: 220px !important;
+            width: 230px !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
           }
           aside.sidebar-container:not(:hover) .sidebar-brand-text,

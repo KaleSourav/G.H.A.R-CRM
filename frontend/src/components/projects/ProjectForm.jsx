@@ -59,6 +59,7 @@ export default function ProjectForm({ project, onClose, onSave }) {
   return (
     <div className="modal-overlay">
       <div className="modal modal-lg">
+        <div className="modal-sheet-handle" />
         <div className="modal-header">
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{isEdit ? 'Edit Project' : 'Add Project'}</h2>
           <button onClick={onClose} className="btn btn-ghost btn-icon"><svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg></button>
@@ -66,7 +67,7 @@ export default function ProjectForm({ project, onClose, onSave }) {
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-grid-2">
               <div className="form-group" style={{ gridColumn: '1/-1' }}>
                 <label className="form-label">Project Name *</label>
                 <input className="form-input" placeholder="e.g., Emerald Heights" {...f('name')} required />

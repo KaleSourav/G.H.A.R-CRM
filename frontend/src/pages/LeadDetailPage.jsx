@@ -172,38 +172,61 @@ export default function LeadDetailPage() {
           </div>
 
           {/* Direct Actions Toolbar */}
-          <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', flexShrink: 0, marginTop: '0.25rem' }}>
             <a
               href={`tel:${lead.phone}`}
-              className="btn btn-primary btn-sm"
-              style={{ gap: '0.35rem' }}
+              className="btn btn-primary"
+              style={{ gap: '0.4rem', flex: '1 1 auto', minHeight: 40, justifyContent: 'center' }}
             >
-              <Phone size={13} strokeWidth={2} /> Call
+              <Phone size={14} strokeWidth={2.2} /> Call Client
             </a>
             <a
               href={getWhatsAppUrl(lead.phone, lead.name, lead.project?.name)}
               target="_blank"
               rel="noreferrer"
-              className="btn btn-secondary btn-sm"
-              style={{ gap: '0.35rem', color: '#25D366', borderColor: 'rgba(37,211,102,0.35)', background: 'rgba(37,211,102,0.08)' }}
+              className="btn btn-secondary"
+              style={{
+                gap: '0.4rem',
+                color: '#25D366',
+                borderColor: 'rgba(37,211,102,0.4)',
+                background: 'rgba(37,211,102,0.1)',
+                flex: '1 1 auto',
+                minHeight: 40,
+                justifyContent: 'center',
+              }}
             >
-              <WhatsAppIcon size={14} /> WhatsApp
+              <WhatsAppIcon size={16} /> WhatsApp
             </a>
-            <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
-              <Plus size={13} strokeWidth={2.5} /> Task
+            <button onClick={() => setShowTaskForm(true)} className="btn btn-secondary" style={{ gap: '0.35rem', minHeight: 40 }}>
+              <Plus size={14} strokeWidth={2.5} /> Add Task
             </button>
-            <button onClick={() => setShowEditForm(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
-              <Pencil size={13} strokeWidth={1.75} /> Edit
+            <button onClick={() => setShowEditForm(true)} className="btn btn-secondary" style={{ gap: '0.35rem', minHeight: 40 }}>
+              <Pencil size={14} strokeWidth={1.75} /> Edit
             </button>
           </div>
         </div>
 
         {/* Stage Pipeline Progress */}
-        <div style={{ marginTop: '1.5rem' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Pipeline Stage
+        <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Pipeline Stage Progress
+            </div>
+            <div className="mobile-stage-dropdown-wrap" style={{ display: 'none' }}>
+              <select
+                value={lead.stage}
+                onChange={e => handleStageChange(e.target.value)}
+                className="form-select"
+                style={{ fontSize: '0.75rem', padding: '0.25rem 1.75rem 0.25rem 0.6rem', height: 32, minHeight: 32 }}
+              >
+                {PIPELINE_STAGES.map(stage => (
+                  <option key={stage} value={stage}>{stage}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+
+          <div className="mobile-stage-bar" style={{ display: 'flex', gap: '0.35rem' }}>
             {PIPELINE_STAGES.map((stage, i) => {
               const isCurrent = stage === lead.stage;
               const isPast = i < stageIndex;
@@ -213,16 +236,17 @@ export default function LeadDetailPage() {
                   key={stage}
                   onClick={() => handleStageChange(stage)}
                   style={{
-                    padding: '0.375rem 0.75rem',
-                    borderRadius: '6px',
+                    padding: '0.4rem 0.75rem',
+                    borderRadius: '8px',
                     fontSize: '0.72rem',
-                    fontWeight: isCurrent ? 700 : 400,
-                    border: `1px solid ${isCurrent ? stageConf?.color : 'var(--color-border)'}`,
-                    background: isCurrent ? `${stageConf?.color}20` : isPast ? 'var(--color-surface-2)' : 'transparent',
-                    color: isCurrent ? stageConf?.color : isPast ? 'var(--text-secondary)' : 'var(--text-muted)',
+                    fontWeight: isCurrent ? 700 : 500,
+                    border: `1px solid ${isCurrent ? (stageConf?.color || 'var(--color-primary)') : isPast ? 'var(--color-border)' : 'var(--color-border-light)'}`,
+                    background: isCurrent ? `${stageConf?.color || 'var(--color-primary)'}24` : isPast ? 'var(--color-surface-2)' : 'transparent',
+                    color: isCurrent ? (stageConf?.color || 'var(--color-primary)') : isPast ? 'var(--text-secondary)' : 'var(--text-muted)',
                     cursor: 'pointer',
-                    transition: 'all 150ms',
+                    transition: 'all 120ms',
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
                   }}
                 >
                   {stage}
@@ -238,15 +262,37 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      {/* Two-column layout */}
+      {/* Mobile Tab Switcher */}
+      <div className="mobile-detail-nav">
+        <button
+          className={`mobile-tab-btn ${activeTab === 'activity' ? 'active' : ''}`}
+          onClick={() => setActiveTab('activity')}
+        >
+          Activity & Notes
+        </button>
+        <button
+          className={`mobile-tab-btn ${activeTab === 'details' ? 'active' : ''}`}
+          onClick={() => setActiveTab('details')}
+        >
+          Lead Details
+        </button>
+        <button
+          className={`mobile-tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tasks')}
+        >
+          Tasks ({lead.tasks?.length || 0})
+        </button>
+      </div>
+
+      {/* Two-column layout with mobile tab support */}
       <div className="lead-detail-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem' }}>
-        {/* Left: Activity + Tabs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Left: Activity */}
+        <div className={`detail-col-activity ${activeTab !== 'activity' ? 'tab-hidden-mobile' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Log activity */}
           <div className="card">
             <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.75rem' }}>Log Activity</h3>
             <form onSubmit={handleAddNote} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                 {[
                   { value: 'note',               label: 'Note' },
                   { value: 'call',               label: 'Call' },
@@ -259,6 +305,7 @@ export default function LeadDetailPage() {
                     type="button"
                     onClick={() => setNoteType(t.value)}
                     className={`btn btn-sm ${noteType === t.value ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ minHeight: 34 }}
                   >
                     {t.label}
                   </button>
@@ -271,7 +318,7 @@ export default function LeadDetailPage() {
                 onChange={e => setNoteText(e.target.value)}
                 rows={3}
               />
-              <button type="submit" className="btn btn-primary btn-sm" disabled={addingNote || !noteText.trim()} style={{ alignSelf: 'flex-end' }}>
+              <button type="submit" className="btn btn-primary btn-sm" disabled={addingNote || !noteText.trim()} style={{ alignSelf: 'flex-end', minHeight: 36 }}>
                 {addingNote ? 'Logging...' : 'Log Activity'}
               </button>
             </form>
@@ -284,10 +331,10 @@ export default function LeadDetailPage() {
           </div>
         </div>
 
-        {/* Right: Details */}
+        {/* Right: Details & Tasks */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Assignment */}
-          <div className="card">
+          {/* Assignment (Shown in details tab on mobile, or on desktop) */}
+          <div className={`card ${activeTab !== 'details' ? 'tab-hidden-mobile' : ''}`}>
             <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem' }}>Assignment</h3>
             {lead.assignee ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -326,8 +373,8 @@ export default function LeadDetailPage() {
             )}
           </div>
 
-          {/* Lead Details */}
-          <div className="card">
+          {/* Lead Details (Shown in details tab on mobile, or on desktop) */}
+          <div className={`card ${activeTab !== 'details' ? 'tab-hidden-mobile' : ''}`}>
             <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem' }}>Lead Details</h3>
             {[
               { label: 'Source', value: `${lead.source}${lead.sub_source ? ` • ${lead.sub_source}` : ''}` },
@@ -349,8 +396,8 @@ export default function LeadDetailPage() {
             ))}
           </div>
 
-          {/* Tasks */}
-          <div className="card">
+          {/* Tasks (Shown in tasks tab on mobile, or on desktop) */}
+          <div className={`card ${activeTab !== 'tasks' ? 'tab-hidden-mobile' : ''}`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '0.875rem', fontWeight: 600 }}>Tasks ({lead.tasks?.length || 0})</h3>
               <button onClick={() => setShowTaskForm(true)} className="btn btn-ghost btn-sm">+ Add</button>
@@ -382,7 +429,7 @@ export default function LeadDetailPage() {
 
           {/* Unit Interest */}
           {lead.unit_interest && (
-            <div className="card">
+            <div className={`card ${activeTab !== 'details' ? 'tab-hidden-mobile' : ''}`}>
               <h3 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.75rem' }}>Interested Unit</h3>
               <div style={{ fontSize: '0.8rem' }}>
                 <div style={{ fontWeight: 600 }}>{lead.unit_interest.unit_number}</div>
@@ -396,6 +443,47 @@ export default function LeadDetailPage() {
           )}
         </div>
       </div>
+
+      <style>{`
+        .mobile-detail-nav {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .mobile-detail-nav {
+            display: flex;
+            gap: 0.35rem;
+            background: var(--color-surface);
+            padding: 0.35rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--color-border);
+          }
+          .mobile-tab-btn {
+            flex: 1;
+            padding: 0.55rem 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            text-align: center;
+            transition: all 120ms;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+          }
+          .mobile-tab-btn.active {
+            background: var(--color-primary-dim);
+            color: var(--color-primary);
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(232,160,32,0.15);
+          }
+          .mobile-stage-dropdown-wrap {
+            display: block !important;
+          }
+          .tab-hidden-mobile {
+            display: none !important;
+          }
+        }
+      `}</style>
 
       {/* Modals */}
       {showTaskForm && (
