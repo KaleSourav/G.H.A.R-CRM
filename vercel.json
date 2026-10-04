@@ -4,8 +4,16 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/crm/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
       "source": "/crm/(.*)",
-      "destination": "/crm/index.html"
+      "destination": "/index.html"
+    },
+    {
+      "source": "/crm",
+      "destination": "/index.html"
     }
   ]
 }
