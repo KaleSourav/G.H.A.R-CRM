@@ -98,7 +98,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter basename="/crm">
+        <BrowserRouter >
           <AppRoutes />
           <Toaster
             position="top-right"
