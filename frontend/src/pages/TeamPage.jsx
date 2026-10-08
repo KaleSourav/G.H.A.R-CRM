@@ -3,7 +3,7 @@ import { teamAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ROLES } from '../utils/constants';
 import { formatDate, getInitials } from '../utils/helpers';
-import { Plus, X, Shield, ShieldCheck, UserCheck } from 'lucide-react';
+import { Plus, X, Shield, ShieldCheck, UserCheck, Trash2, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function TeamPage() {
@@ -91,6 +91,21 @@ export default function TeamPage() {
     }
   };
 
+  const handlePermanentDelete = async (id, name, email) => {
+    if (!isSuperAdmin) {
+      toast.error('Only Super Admins can permanently delete team members');
+      return;
+    }
+    if (!confirm(`Permanently delete ${name} (${email})?\n\nThis will remove their profile and login credentials completely. This action cannot be undone.`)) return;
+    try {
+      await teamAPI.delete(id, { permanent: true });
+      toast.success(`${name} permanently deleted`);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to permanently delete user');
+    }
+  };
+
   const managers = team.filter(u => u.role === 'manager');
 
   // Identify founders and super admins, and group by display role
@@ -100,7 +115,7 @@ export default function TeamPage() {
       u.role === 'super_admin' ||
       u.role === 'superadmin' ||
       u.is_super_admin ||
-      ['admin@ghar.in', 'sourav@ghar.in'].includes(u.email?.toLowerCase())
+      ['vinaykarir@ghar.in', 'asif@ghar.in'].includes(u.email?.toLowerCase())
     ) {
       displayRole = 'super_admin';
     }
@@ -189,7 +204,7 @@ export default function TeamPage() {
                         {member.manager && <span> · Reports to {member.manager.name}</span>}
                       </div>
                       {canCreateUsers && member.id !== user?.id && (
-                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
                           <button
                             onClick={() => openEditModal(member)}
                             className="btn btn-ghost btn-sm"
@@ -202,7 +217,8 @@ export default function TeamPage() {
                             <button
                               onClick={() => handleToggleStatus(member.id, member.name, 'inactive')}
                               className="btn btn-ghost btn-sm"
-                              style={{ fontSize: '0.7rem', color: 'var(--color-danger)' }}
+                              style={{ fontSize: '0.7rem', color: 'var(--color-warning)' }}
+                              title="Deactivate account"
                             >
                               Deactivate
                             </button>
@@ -211,8 +227,19 @@ export default function TeamPage() {
                               onClick={() => handleToggleStatus(member.id, member.name, 'active')}
                               className="btn btn-ghost btn-sm"
                               style={{ fontSize: '0.7rem', color: 'var(--color-success)' }}
+                              title="Activate account"
                             >
                               Activate
+                            </button>
+                          )}
+                          {isSuperAdmin && (
+                            <button
+                              onClick={() => handlePermanentDelete(member.id, member.name, member.email)}
+                              className="btn btn-ghost btn-sm"
+                              style={{ fontSize: '0.7rem', color: 'var(--color-danger)' }}
+                              title="Permanently delete user (Super Admin only)"
+                            >
+                              <Trash2 size={12} strokeWidth={2} style={{ marginRight: '0.15rem' }} /> Delete
                             </button>
                           )}
                         </div>

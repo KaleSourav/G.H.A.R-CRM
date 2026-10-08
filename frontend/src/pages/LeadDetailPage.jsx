@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Pencil, Plus, Phone, Mail, Tag, Building2,
   Ruler, IndianRupee, AlertTriangle, FileText, MessageSquare, MapPin,
-  CheckCircle, Clock,
+  CheckCircle, Clock, Trash2,
 } from 'lucide-react';
 import { leadsAPI, tasksAPI, teamAPI, projectsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +19,7 @@ import toast from 'react-hot-toast';
 export default function LeadDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, canManageTeam, refreshAssignedStats } = useAuth();
+  const { user, isAdmin, isSuperAdmin, canManageTeam, refreshAssignedStats } = useAuth();
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState('');
@@ -31,6 +31,18 @@ export default function LeadDetailPage() {
   const [executives, setExecutives] = useState([]);
   const [projects, setProjects] = useState([]);
   const [activeTab, setActiveTab] = useState('activity');
+
+  const handleDeleteLead = async () => {
+    if (!isAdmin && !isSuperAdmin) return;
+    if (!confirm(`Delete ${lead?.name || 'this lead'}? This will remove all associated activities and tasks. This cannot be undone.`)) return;
+    try {
+      await leadsAPI.delete(id);
+      toast.success('Lead deleted successfully');
+      navigate('/leads');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete lead');
+    }
+  };
 
   const loadLead = useCallback(async () => {
     try {
@@ -203,6 +215,16 @@ export default function LeadDetailPage() {
             <button onClick={() => setShowEditForm(true)} className="btn btn-secondary" style={{ gap: '0.35rem', minHeight: 40 }}>
               <Pencil size={14} strokeWidth={1.75} /> Edit
             </button>
+            {(isAdmin || isSuperAdmin) && (
+              <button
+                onClick={handleDeleteLead}
+                className="btn btn-secondary"
+                style={{ gap: '0.35rem', minHeight: 40, color: 'var(--color-danger)', borderColor: 'rgba(239,68,68,0.3)' }}
+                title="Delete this lead permanently"
+              >
+                <Trash2 size={14} strokeWidth={1.75} /> Delete
+              </button>
+            )}
           </div>
         </div>
 

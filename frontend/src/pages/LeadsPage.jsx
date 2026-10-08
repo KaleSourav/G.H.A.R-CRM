@@ -8,7 +8,7 @@ import {
   Download, Upload, SlidersHorizontal, Search, Pencil,
   Plus, Users, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown,
   Phone, MessageSquare, Flame, CheckCircle, Clock, ChevronRight, Building2,
-  FileSpreadsheet, UserCheck, ArrowRightLeft,
+  FileSpreadsheet, UserCheck, ArrowRightLeft, Trash2,
 } from 'lucide-react';
 import LeadForm from '../components/leads/LeadForm';
 import LeadFilters from '../components/leads/LeadFilters';
@@ -34,7 +34,7 @@ export function WhatsAppIcon({ size = 15, ...props }) {
 }
 
 export default function LeadsPage() {
-  const { user, isSuperAdmin, canViewAllLeads, canManageTeam, refreshAssignedStats } = useAuth();
+  const { user, isAdmin, isSuperAdmin, canViewAllLeads, canManageTeam, refreshAssignedStats } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -142,6 +142,23 @@ export default function LeadsPage() {
       refreshAssignedStats();
     } catch (err) {
       toast.error('Bulk reassign failed');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!isAdmin && !isSuperAdmin) {
+      toast.error('Only Admins and Super Admins can delete leads');
+      return;
+    }
+    if (!confirm(`Are you sure you want to permanently delete all ${selectedLeads.size} selected leads? This will delete all their activities, tasks, and history and cannot be undone.`)) return;
+    try {
+      await leadsAPI.bulk('delete', [...selectedLeads]);
+      toast.success(`${selectedLeads.size} leads deleted successfully`);
+      setSelectedLeads(new Set());
+      loadLeads();
+      refreshAssignedStats();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete selected leads');
     }
   };
 
@@ -357,9 +374,19 @@ export default function LeadsPage() {
           </div>
 
           {selectedLeads.size > 0 && canManageTeam && (
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: 'auto' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: 'auto', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{selectedLeads.size} selected</span>
               <button onClick={handleBulkReassign} className="btn btn-secondary btn-sm">Reassign</button>
+              {(isAdmin || isSuperAdmin) && (
+                <button
+                  onClick={handleBulkDelete}
+                  className="btn btn-secondary btn-sm"
+                  style={{ color: 'var(--color-danger)', borderColor: 'rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.08)', gap: '0.35rem' }}
+                  title="Permanently delete selected leads"
+                >
+                  <Trash2 size={13} /> Delete ({selectedLeads.size})
+                </button>
+              )}
               <button onClick={() => setSelectedLeads(new Set())} className="btn btn-ghost btn-sm">Clear</button>
             </div>
           )}
@@ -540,6 +567,16 @@ export default function LeadsPage() {
                         <button onClick={() => { setEditLead(lead); setShowLeadForm(true); }} className="btn btn-ghost btn-sm btn-icon" title="Edit" style={{ width: 28, height: 28, padding: 0 }}>
                           <Pencil size={13} strokeWidth={1.75} />
                         </button>
+                        {(isAdmin || isSuperAdmin) && (
+                          <button
+                            onClick={() => handleDelete(lead.id)}
+                            className="btn btn-ghost btn-sm btn-icon"
+                            title="Delete Lead"
+                            style={{ width: 28, height: 28, padding: 0, color: 'var(--color-danger)' }}
+                          >
+                            <Trash2 size={13} strokeWidth={1.75} />
+                          </button>
+                        )}
                         <button onClick={() => navigate(`/leads/${lead.id}`)} className="btn btn-ghost btn-sm btn-icon" title="View" style={{ width: 28, height: 28, padding: 0 }}>
                           <ChevronRight size={14} strokeWidth={2} />
                         </button>
@@ -680,6 +717,20 @@ export default function LeadsPage() {
                     >
                       <Pencil size={14} strokeWidth={1.75} />
                     </button>
+                    {(isAdmin || isSuperAdmin) && (
+                      <button
+                        onClick={() => handleDelete(lead.id)}
+                        title="Delete Lead"
+                        style={{
+                          width: 34, height: 34, borderRadius: 'var(--radius)',
+                          background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'var(--color-danger)', flexShrink: 0,
+                        }}
+                      >
+                        <Trash2 size={14} strokeWidth={1.75} />
+                      </button>
+                    )}
                     <button
                       onClick={() => navigate(`/leads/${lead.id}`)}
                       title="View Details"

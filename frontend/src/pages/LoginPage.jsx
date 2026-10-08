@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { Eye, EyeOff, ArrowRight, Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,6 +39,27 @@ export default function LoginPage() {
       background: 'var(--color-bg)',
       position: 'relative',
     }}>
+      {/* Theme toggle in top-right corner */}
+      <button
+        onClick={toggleTheme}
+        className="btn btn-ghost btn-icon"
+        title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        aria-label="Toggle theme"
+        style={{
+          position: 'absolute',
+          top: '1.25rem',
+          right: '1.25rem',
+          zIndex: 10,
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          width: 38,
+          height: 38,
+          borderRadius: '50%',
+        }}
+      >
+        {isDark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
+      </button>
+
       {/* Background decoration */}
       <div style={{
         position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none',
@@ -61,7 +84,7 @@ export default function LoginPage() {
         border: '1px solid var(--color-border)',
         borderRadius: '20px',
         padding: '2rem 1.5rem',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+        boxShadow: isDark ? '0 25px 60px rgba(0,0,0,0.5)' : '0 20px 45px rgba(15,23,42,0.08)',
         position: 'relative',
         animation: 'slideUp 0.4s ease',
       }}>

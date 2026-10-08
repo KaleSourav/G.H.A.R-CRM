@@ -1,4 +1,4 @@
-const FOUNDER_EMAILS = ['admin@ghar.in', 'sourav@ghar.in'];
+const FOUNDER_EMAILS = ['vinaykarir@ghar.in', 'asif@ghar.in'];
 
 /**
  * Check if a user is a Super Admin (Founders or users explicitly assigned super_admin role)

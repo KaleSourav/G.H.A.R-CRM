@@ -42,7 +42,7 @@ const authenticate = async (req, res, next) => {
       user.user_metadata?.role === 'super_admin' ||
       user.user_metadata?.role === 'superadmin' ||
       user.user_metadata?.is_super_admin === true ||
-      ['admin@ghar.in', 'sourav@ghar.in'].includes(emailLower)
+      ['vinaykarir@ghar.in', 'asif@ghar.in'].includes(emailLower)
     );
 
     if (isSuper) {

@@ -37,7 +37,7 @@ router.get('/', requireRole(['admin', 'manager', 'executive', 'super_admin']), a
       console.warn('[Team GET] Failed to list auth users:', e.message);
     }
 
-    const FOUNDER_EMAILS = ['admin@ghar.in', 'sourav@ghar.in'];
+    const FOUNDER_EMAILS = ['vinaykarir@ghar.in', 'asif@ghar.in'];
 
     const enrichedUsers = (users || []).map(u => {
       const emailLower = (u.email || '').toLowerCase();
@@ -198,10 +198,26 @@ router.put('/:id', requireRole(['admin', 'super_admin']), async (req, res) => {
   }
 });
 
-// DELETE /api/team/:id — deactivate user (Admin & Super Admin)
+// DELETE /api/team/:id — deactivate user (Admin & Super Admin) or permanent delete (Super Admin only)
 router.delete('/:id', requireRole(['admin', 'super_admin']), async (req, res) => {
   try {
-    // Deactivate instead of delete to preserve audit trail
+    const { permanent } = req.query;
+
+    if (permanent === 'true') {
+      if (!isSuperAdmin(req.user)) {
+        return res.status(403).json({ error: 'Access denied: Only Super Admins can permanently delete users.' });
+      }
+      // Delete user profile and auth record
+      await supabaseAdmin.from('users').delete().eq('id', req.params.id).eq('org_id', req.orgId);
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(req.params.id);
+      } catch (authErr) {
+        console.warn('[Team DELETE] Auth user deletion warning:', authErr.message);
+      }
+      return res.json({ message: 'User permanently deleted' });
+    }
+
+    // Default: Deactivate user
     await supabaseAdmin.from('users')
       .update({ status: 'inactive' }).eq('id', req.params.id).eq('org_id', req.orgId);
     res.json({ message: 'User deactivated' });

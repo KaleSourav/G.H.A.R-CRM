@@ -449,10 +449,14 @@ router.post('/bulk', requireRole(['admin', 'manager', 'executive', 'super_admin'
       }
       case 'delete': {
         if (!isSuperAdmin(req.user) && req.userRole !== 'admin') {
-          return res.status(403).json({ error: 'Only super admin or admin can bulk delete' });
+          return res.status(403).json({ error: 'Only super admin or admin can delete leads' });
         }
-        await supabaseAdmin.from('leads').delete().in('id', lead_ids);
-        return res.json({ message: `${lead_ids.length} leads deleted` });
+        await supabaseAdmin.from('lead_activities').delete().in('lead_id', lead_ids);
+        await supabaseAdmin.from('tasks').delete().in('lead_id', lead_ids);
+        await supabaseAdmin.from('notifications').delete().in('lead_id', lead_ids);
+        const { error } = await supabaseAdmin.from('leads').delete().in('id', lead_ids).eq('org_id', req.orgId);
+        if (error) throw error;
+        return res.json({ message: `${lead_ids.length} leads deleted successfully` });
       }
       default:
         return res.status(400).json({ error: `Unknown action: ${action}` });
@@ -463,11 +467,14 @@ router.post('/bulk', requireRole(['admin', 'manager', 'executive', 'super_admin'
 });
 
 // ── DELETE /api/leads/:id ──────────────────────────────────────────────────
-router.delete('/:id', requireRole(['admin']), async (req, res) => {
+router.delete('/:id', requireRole(['admin', 'super_admin']), async (req, res) => {
   try {
+    await supabaseAdmin.from('lead_activities').delete().eq('lead_id', req.params.id);
+    await supabaseAdmin.from('tasks').delete().eq('lead_id', req.params.id);
+    await supabaseAdmin.from('notifications').delete().eq('lead_id', req.params.id);
     const { error } = await supabaseAdmin.from('leads').delete().eq('id', req.params.id).eq('org_id', req.orgId);
     if (error) throw error;
-    res.json({ message: 'Lead deleted' });
+    res.json({ message: 'Lead deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

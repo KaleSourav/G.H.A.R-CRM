@@ -70,7 +70,7 @@ export default function Topbar({ onMenuClick }) {
       left: 'var(--sidebar-width)',
       height: 'var(--topbar-height)',
       paddingTop: 'var(--sat)',
-      background: 'rgba(13,21,38,0.92)',
+      background: isDark ? 'rgba(13,21,38,0.92)' : 'rgba(255,255,255,0.94)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
       borderBottom: '1px solid var(--color-border)',

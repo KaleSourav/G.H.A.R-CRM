@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
   // ── Role & Permission Definitions ──────────────────────────────────────────
   const email = (user?.email || '').toLowerCase();
   const role = (user?.role || '').toLowerCase();
-  const FOUNDER_EMAILS = ['admin@ghar.in', 'sourav@ghar.in'];
+  const FOUNDER_EMAILS = ['vinaykarir@ghar.in', 'asif@ghar.in'];
 
   // Super Admin: Founders or users with super_admin role / is_super_admin flag
   const isSuperAdmin = role === 'super_admin' || role === 'superadmin' || user?.is_super_admin === true || FOUNDER_EMAILS.includes(email);
