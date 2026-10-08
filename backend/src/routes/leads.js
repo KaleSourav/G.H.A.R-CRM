@@ -159,7 +159,7 @@ router.get('/assigned-stats', async (req, res) => {
 router.get('/export-excel-data', requireSuperAdmin, async (req, res) => {
   try {
     const { orgId } = req;
-    const { stage, priority, source, assigned_to, search } = req.query;
+    const { stage, priority, source, assigned_to, search, all } = req.query;
 
     let queryBuilder = supabaseAdmin
       .from('leads')
@@ -171,13 +171,16 @@ router.get('/export-excel-data', requireSuperAdmin, async (req, res) => {
       .eq('org_id', orgId)
       .order('created_at', { ascending: false });
 
-    if (stage) queryBuilder = queryBuilder.eq('stage', stage);
-    if (priority) queryBuilder = queryBuilder.eq('priority', priority);
-    if (source) queryBuilder = queryBuilder.eq('source', source);
-    if (assigned_to === 'unassigned') queryBuilder = queryBuilder.is('assigned_to', null);
-    else if (assigned_to) queryBuilder = queryBuilder.eq('assigned_to', assigned_to);
-    if (search) {
-      queryBuilder = queryBuilder.or(`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
+    // If all is true, export complete leads database without applying narrow filters
+    if (all !== 'true' && all !== true) {
+      if (stage) queryBuilder = queryBuilder.eq('stage', stage);
+      if (priority) queryBuilder = queryBuilder.eq('priority', priority);
+      if (source) queryBuilder = queryBuilder.eq('source', source);
+      if (assigned_to === 'unassigned') queryBuilder = queryBuilder.is('assigned_to', null);
+      else if (assigned_to) queryBuilder = queryBuilder.eq('assigned_to', assigned_to);
+      if (search) {
+        queryBuilder = queryBuilder.or(`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
+      }
     }
 
     const { data: leads, error } = await queryBuilder;

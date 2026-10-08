@@ -230,9 +230,3 @@ G.H.A.R CRM is a production-ready, full-stack real estate Customer Relationship 
   - AI Next-Best-Action recommendation engine & predictive lead conversion scoring.
   - Direct API webhooks from real estate portals (99acres, MagicBricks, Housing.com).
   - Automated qualification voice bot / chatbot.
-
-
-
-
-
-

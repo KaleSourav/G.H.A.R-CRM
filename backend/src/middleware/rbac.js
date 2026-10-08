@@ -7,7 +7,12 @@ const isSuperAdmin = (user) => {
   if (!user) return false;
   const role = (user.role || '').toLowerCase();
   const email = (user.email || '').toLowerCase();
-  return role === 'super_admin' || role === 'superadmin' || FOUNDER_EMAILS.includes(email);
+  return (
+    role === 'super_admin' ||
+    role === 'superadmin' ||
+    user.is_super_admin === true ||
+    FOUNDER_EMAILS.includes(email)
+  );
 };
 
 /**

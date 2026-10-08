@@ -14,6 +14,11 @@ export default function TeamPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', role: 'executive', manager_id: '', password: '' });
   const [saving, setSaving] = useState(false);
 
+  // Edit user state
+  const [editUser, setEditUser] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', phone: '', role: '', manager_id: '', status: '' });
+  const [editingSaving, setEditingSaving] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -28,7 +33,7 @@ export default function TeamPage() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!canCreateUsers) {
-      toast.error('Only Super Admins (Founders) can create new users');
+      toast.error('Only Admins and Super Admins can create new users');
       return;
     }
     setSaving(true);
@@ -43,25 +48,60 @@ export default function TeamPage() {
     } finally { setSaving(false); }
   };
 
-  const handleDeactivate = async (id, name) => {
+  const handleToggleStatus = async (id, name, newStatus) => {
     if (!canCreateUsers) {
-      toast.error('Only Super Admins can deactivate users');
+      toast.error('Only Admins and Super Admins can manage user status');
       return;
     }
-    if (!confirm(`Deactivate ${name}?`)) return;
+    const actionLabel = newStatus === 'active' ? 'activate' : 'deactivate';
+    if (!confirm(`Are you sure you want to ${actionLabel} ${name}?`)) return;
     try {
-      await teamAPI.delete(id);
-      toast.success(`${name} deactivated`);
+      await teamAPI.update(id, { status: newStatus });
+      toast.success(`${name} ${newStatus === 'active' ? 'activated' : 'deactivated'}`);
       load();
-    } catch (err) { toast.error('Failed to deactivate user'); }
+    } catch (err) {
+      toast.error(err.response?.data?.error || `Failed to ${actionLabel} user`);
+    }
+  };
+
+  const openEditModal = (member) => {
+    setEditUser(member);
+    setEditForm({
+      name: member.name || '',
+      phone: member.phone || '',
+      role: member.role || 'executive',
+      manager_id: member.manager_id || '',
+      status: member.status || 'active',
+    });
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    if (!canCreateUsers) return;
+    setEditingSaving(true);
+    try {
+      await teamAPI.update(editUser.id, editForm);
+      toast.success(`${editForm.name} updated successfully`);
+      setEditUser(null);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update user');
+    } finally {
+      setEditingSaving(false);
+    }
   };
 
   const managers = team.filter(u => u.role === 'manager');
 
-  // Identify founders and group by display role
+  // Identify founders and super admins, and group by display role
   const byRole = team.reduce((acc, u) => {
     let displayRole = u.role;
-    if (u.role === 'super_admin' || u.role === 'superadmin' || ['admin@ghar.in', 'sourav@ghar.in'].includes(u.email?.toLowerCase())) {
+    if (
+      u.role === 'super_admin' ||
+      u.role === 'superadmin' ||
+      u.is_super_admin ||
+      ['admin@ghar.in', 'sourav@ghar.in'].includes(u.email?.toLowerCase())
+    ) {
       displayRole = 'super_admin';
     }
     (acc[displayRole] = acc[displayRole] || []).push(u);
@@ -83,7 +123,7 @@ export default function TeamPage() {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 className="page-title">Team Directory</h1>
-          <p className="page-subtitle">{team.length} active team members</p>
+          <p className="page-subtitle">{team.length} team members</p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -96,7 +136,7 @@ export default function TeamPage() {
               padding: '0.35rem 0.75rem',
               borderRadius: 'var(--radius)',
             }}>
-              Directory View · User creation & roles are managed by Founders (Super Admin)
+              Directory View · User creation & roles are managed by Admins and Founders
             </span>
           )}
 
@@ -148,14 +188,34 @@ export default function TeamPage() {
                         {member.current_lead_count || 0} active leads
                         {member.manager && <span> · Reports to {member.manager.name}</span>}
                       </div>
-                      {canCreateUsers && member.id !== user?.id && member.status === 'active' && (
-                        <button
-                          onClick={() => handleDeactivate(member.id, member.name)}
-                          className="btn btn-ghost btn-sm"
-                          style={{ fontSize: '0.7rem', color: 'var(--color-danger)' }}
-                        >
-                          Deactivate
-                        </button>
+                      {canCreateUsers && member.id !== user?.id && (
+                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                          <button
+                            onClick={() => openEditModal(member)}
+                            className="btn btn-ghost btn-sm"
+                            style={{ fontSize: '0.7rem' }}
+                            title="Edit User"
+                          >
+                            Edit
+                          </button>
+                          {member.status === 'active' ? (
+                            <button
+                              onClick={() => handleToggleStatus(member.id, member.name, 'inactive')}
+                              className="btn btn-ghost btn-sm"
+                              style={{ fontSize: '0.7rem', color: 'var(--color-danger)' }}
+                            >
+                              Deactivate
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleToggleStatus(member.id, member.name, 'active')}
+                              className="btn btn-ghost btn-sm"
+                              style={{ fontSize: '0.7rem', color: 'var(--color-success)' }}
+                            >
+                              Activate
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -166,7 +226,7 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Add User Modal — Super Admin Only */}
+      {/* Add User Modal — Admin & Super Admin */}
       {showForm && canCreateUsers && (
         <div className="modal-overlay">
           <div className="modal">
@@ -193,7 +253,7 @@ export default function TeamPage() {
                   <label className="form-label">Role *</label>
                   <select className="form-select" value={form.role} onChange={e => setForm(f => ({...f, role: e.target.value}))}>
                     <option value="super_admin">Super Admin (Founder — Full Access & XL Download)</option>
-                    <option value="admin">Admin (CRM Operations — No XL Download, No User Creation)</option>
+                    <option value="admin">Admin (CRM Operations & User Creation — No XL Download)</option>
                     <option value="manager">Sales Manager</option>
                     <option value="executive">Sales Executive</option>
                     <option value="front_office">Front Office</option>
@@ -218,6 +278,93 @@ export default function TeamPage() {
                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
                   {saving ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal — Admin & Super Admin */}
+      {editUser && canCreateUsers && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-sheet-handle" />
+            <div className="modal-header">
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Edit Team Member</h2>
+              <button onClick={() => setEditUser(null)} className="btn btn-ghost btn-icon"><X size={18} strokeWidth={1.75} /></button>
+            </div>
+            <form onSubmit={handleUpdateUser}>
+              <div className="modal-body form-grid-2">
+                <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                  <label className="form-label">Full Name *</label>
+                  <input
+                    className="form-input"
+                    value={editForm.name}
+                    onChange={e => setEditForm(f => ({...f, name: e.target.value}))}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email (Read-only)</label>
+                  <input className="form-input" value={editUser.email} disabled style={{ opacity: 0.7 }} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Phone</label>
+                  <input
+                    className="form-input"
+                    value={editForm.phone}
+                    onChange={e => setEditForm(f => ({...f, phone: e.target.value}))}
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Role *</label>
+                  <select
+                    className="form-select"
+                    value={editForm.role}
+                    onChange={e => setEditForm(f => ({...f, role: e.target.value}))}
+                  >
+                    <option value="super_admin">Super Admin (Founder — Full Access & XL Download)</option>
+                    <option value="admin">Admin (CRM Operations & User Creation — No XL Download)</option>
+                    <option value="manager">Sales Manager</option>
+                    <option value="executive">Sales Executive</option>
+                    <option value="front_office">Front Office</option>
+                    <option value="finance">Finance</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Account Status</label>
+                  <select
+                    className="form-select"
+                    value={editForm.status}
+                    onChange={e => setEditForm(f => ({...f, status: e.target.value}))}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
+                {editForm.role === 'executive' && managers.length > 0 && (
+                  <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                    <label className="form-label">Reports To (Manager)</label>
+                    <select
+                      className="form-select"
+                      value={editForm.manager_id}
+                      onChange={e => setEditForm(f => ({...f, manager_id: e.target.value}))}
+                    >
+                      <option value="">Select Manager</option>
+                      {managers.filter(m => m.id !== editUser.id).map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" onClick={() => setEditUser(null)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={editingSaving}>
+                  {editingSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

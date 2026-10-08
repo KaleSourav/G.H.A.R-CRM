@@ -58,8 +58,8 @@ export function AuthProvider({ children }) {
   const role = (user?.role || '').toLowerCase();
   const FOUNDER_EMAILS = ['admin@ghar.in', 'sourav@ghar.in'];
 
-  // Super Admin: Founders or users with super_admin role
-  const isSuperAdmin = role === 'super_admin' || role === 'superadmin' || FOUNDER_EMAILS.includes(email);
+  // Super Admin: Founders or users with super_admin role / is_super_admin flag
+  const isSuperAdmin = role === 'super_admin' || role === 'superadmin' || user?.is_super_admin === true || FOUNDER_EMAILS.includes(email);
   // Standard Admin (or Super Admin)
   const isAdmin = isSuperAdmin || role === 'admin';
   const isManager = role === 'manager';
@@ -68,8 +68,8 @@ export function AuthProvider({ children }) {
   // Strict user-requested RBAC constraints:
   // 1. Super Admins can download Excel sheet of leads; standard Admin CANNOT download it
   const canDownloadExcel = isSuperAdmin;
-  // 2. Super Admins can create users & assign roles; standard Admin CANNOT create users or roles
-  const canCreateUsers = isSuperAdmin;
+  // 2. Both Super Admin and Admin can create/manage users; standard Admin CANNOT download Excel
+  const canCreateUsers = isSuperAdmin || isAdmin;
   // 3. Team visibility and lead overview
   const canManageTeam = isSuperAdmin || isAdmin || isManager;
   const canViewAllLeads = isSuperAdmin || isAdmin || isManager;

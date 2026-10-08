@@ -35,6 +35,21 @@ const authenticate = async (req, res, next) => {
       return res.status(403).json({ error: 'Account is inactive or suspended.' });
     }
 
+    const emailLower = (profile.email || '').toLowerCase();
+    const isSuper = (
+      profile.role === 'super_admin' ||
+      profile.role === 'superadmin' ||
+      user.user_metadata?.role === 'super_admin' ||
+      user.user_metadata?.role === 'superadmin' ||
+      user.user_metadata?.is_super_admin === true ||
+      ['admin@ghar.in', 'sourav@ghar.in'].includes(emailLower)
+    );
+
+    if (isSuper) {
+      profile.role = 'super_admin';
+      profile.is_super_admin = true;
+    }
+
     req.user = profile;
     req.orgId = profile.org_id;
     req.userRole = profile.role;

@@ -146,26 +146,38 @@ export default function LeadsPage() {
   };
 
   // ── SUPER ADMIN ONLY: Download leads as Microsoft Excel (.xlsx) sheet ────
-  const handleDownloadExcel = async () => {
+  const handleDownloadExcel = async (exportAll = true) => {
     if (!isSuperAdmin) {
       toast.error('Access Denied: Only Super Admins (Founders) can download Excel sheets.');
       return;
     }
 
     setExportingExcel(true);
-    const toastId = toast.loading('Generating Excel sheet...');
+    const toastId = toast.loading('Exporting complete leads report to Excel...');
     try {
-      const activeFilters = Object.fromEntries(Object.entries(filters).filter(([,v]) => v));
-      if (searchTerm) activeFilters.search = searchTerm;
+      const params = exportAll ? { all: 'true' } : {
+        ...Object.fromEntries(Object.entries(filters).filter(([,v]) => v)),
+        search: searchTerm || undefined,
+      };
 
       // Fetch complete unpaginated dataset from Super Admin export endpoint
-      const { data } = await leadsAPI.getExportData(activeFilters);
+      const { data } = await leadsAPI.getExportData(params);
       const leadsToExport = data.leads?.length ? data.leads : leads;
 
+      if (!leadsToExport.length) {
+        toast.dismiss(toastId);
+        toast.error('No leads found to export');
+        return;
+      }
+
       const dateStr = new Date().toISOString().split('T')[0];
-      exportLeadsToExcel(leadsToExport, `GHAR_Leads_Report_${dateStr}.xlsx`);
+      const filename = exportAll
+        ? `GHAR_All_Leads_Full_Details_${dateStr}.xlsx`
+        : `GHAR_Leads_Report_${dateStr}.xlsx`;
+
+      exportLeadsToExcel(leadsToExport, filename);
       toast.dismiss(toastId);
-      toast.success(`Excel sheet downloaded successfully (${leadsToExport.length} leads)`);
+      toast.success(`Excel sheet downloaded successfully (${leadsToExport.length} leads with full details)`);
     } catch (err) {
       toast.dismiss(toastId);
       toast.error(err.response?.data?.error || 'Failed to download Excel sheet');
@@ -225,22 +237,23 @@ export default function LeadsPage() {
             </button>
           )}
 
-          {/* Super Admin ONLY: Excel Sheet Download (Admins cannot see or download) */}
+          {/* Super Admin ONLY: Download All Leads in Excel with Full Details */}
           {isSuperAdmin && (
             <button
-              onClick={handleDownloadExcel}
+              onClick={() => handleDownloadExcel(true)}
               disabled={exportingExcel}
               className="btn btn-secondary btn-sm"
               style={{
-                borderColor: 'var(--color-primary)',
-                color: 'var(--color-primary)',
-                gap: '0.35rem',
-                fontWeight: 600,
+                borderColor: '#10B981',
+                color: '#10B981',
+                background: 'rgba(16, 185, 129, 0.08)',
+                gap: '0.4rem',
+                fontWeight: 700,
               }}
-              title="Download Excel (.xlsx) sheet of leads (Super Admin only)"
+              title="Download all leads with full details in Excel (.xlsx) format (Super Admin exclusive)"
             >
-              <FileSpreadsheet size={14} strokeWidth={2} />
-              {exportingExcel ? 'Exporting...' : 'Download XL'}
+              <FileSpreadsheet size={15} strokeWidth={2.2} />
+              {exportingExcel ? 'Exporting All Leads...' : 'Download All Leads (.xlsx)'}
             </button>
           )}
 
