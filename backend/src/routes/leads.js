@@ -11,6 +11,66 @@ const { updateLeadScore, calculateLeadScore } = require('../services/leadScore')
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
+// Valid database columns on the Supabase 'leads' table
+const ALLOWED_LEAD_COLUMNS = [
+  'org_id', 'name', 'phone', 'email', 'alternate_phone', 'alternate_email',
+  'source', 'sub_source', 'project_id', 'unit_interest_id', 'budget_min', 'budget_max',
+  'configuration', 'location_pref', 'purpose', 'stage', 'lost_reason', 'priority',
+  'lead_score', 'assigned_to', 'assigned_at', 'last_activity_at', 'next_followup_at',
+  'first_contacted_at', 'sla_breach', 'is_duplicate', 'duplicate_of', 'notes'
+];
+
+/**
+ * Normalizes lead payload from mobile / web inputs to match Supabase database schema
+ * Prevents "Could not find the 'xyz' column of 'leads' in the schema cache" errors.
+ */
+function sanitizeLeadPayload(input) {
+  if (!input || typeof input !== 'object') return {};
+  const data = { ...input };
+
+  // Map single budget field (sent by mobile app) to budget_min / budget_max
+  if (data.budget !== undefined && data.budget !== null && data.budget !== '') {
+    const raw = typeof data.budget === 'number' ? data.budget : String(data.budget).replace(/\D/g, '');
+    const num = Number(raw);
+    if (!isNaN(num) && num > 0) {
+      if (!data.budget_max) data.budget_max = num;
+      if (!data.budget_min) data.budget_min = num;
+    }
+  }
+
+  // Parse budget_min and budget_max to integers
+  if (data.budget_min !== undefined && data.budget_min !== null && data.budget_min !== '') {
+    const minNum = typeof data.budget_min === 'number' ? data.budget_min : Number(String(data.budget_min).replace(/\D/g, ''));
+    data.budget_min = !isNaN(minNum) && minNum > 0 ? minNum : null;
+  }
+  if (data.budget_max !== undefined && data.budget_max !== null && data.budget_max !== '') {
+    const maxNum = typeof data.budget_max === 'number' ? data.budget_max : Number(String(data.budget_max).replace(/\D/g, ''));
+    data.budget_max = !isNaN(maxNum) && maxNum > 0 ? maxNum : null;
+  }
+
+  // Ensure priority conforms to database check constraint
+  if (data.priority && !['hot', 'warm', 'cold'].includes(data.priority)) {
+    data.priority = 'warm';
+  }
+
+  // Pick only valid columns to prevent PostgREST schema cache errors
+  const sanitized = {};
+  for (const col of ALLOWED_LEAD_COLUMNS) {
+    if (data[col] !== undefined) {
+      sanitized[col] = data[col];
+    }
+  }
+  return sanitized;
+}
+
+function formatLeadResponse(lead) {
+  if (!lead) return lead;
+  return {
+    ...lead,
+    budget: lead.budget_max || lead.budget_min || null,
+  };
+}
+
 // All routes require authentication
 router.use(authenticate);
 
@@ -74,7 +134,7 @@ router.get('/', async (req, res) => {
     if (error) throw error;
 
     res.json({
-      leads: data || [],
+      leads: (data || []).map(formatLeadResponse),
       pagination: {
         total: count || 0,
         page: parseInt(page),
@@ -187,7 +247,7 @@ router.get('/export-excel-data', requireSuperAdmin, async (req, res) => {
     if (error) throw error;
 
     res.json({
-      leads: leads || [],
+      leads: (leads || []).map(formatLeadResponse),
       total: (leads || []).length,
     });
   } catch (err) {
@@ -224,7 +284,16 @@ router.get('/:id', async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.json(lead);
+    // Attach completed boolean on tasks for mobile client compatibility
+    const formattedTasks = (lead.tasks || []).map(t => ({
+      ...t,
+      completed: t.status === 'completed',
+    }));
+
+    res.json({
+      ...formatLeadResponse(lead),
+      tasks: formattedTasks,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -240,11 +309,16 @@ router.post('/', [
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   try {
-    const leadData = {
+    const rawData = {
       ...req.body,
       org_id: req.orgId,
       stage: req.body.stage || 'New / Unassigned',
     };
+
+    // Sanitize payload: maps 'budget' -> budget_min/budget_max and strips unrecognized fields
+    const leadData = sanitizeLeadPayload(rawData);
+    leadData.org_id = req.orgId;
+    leadData.stage = leadData.stage || 'New / Unassigned';
 
     // Calculate initial lead score
     const { score, priority } = calculateLeadScore(leadData, 0);
@@ -252,11 +326,13 @@ router.post('/', [
     leadData.priority = priority;
 
     // Duplicate detection
+    const cleanPhone = String(leadData.phone || '').trim();
+    const cleanEmail = String(leadData.email || '').trim();
     const { data: existing } = await supabaseAdmin
       .from('leads')
       .select('id')
       .eq('org_id', req.orgId)
-      .or(`phone.eq.${leadData.phone}${leadData.email ? `,email.eq.${leadData.email}` : ''}`)
+      .or(`phone.eq.${cleanPhone}${cleanEmail ? `,email.eq.${cleanEmail}` : ''}`)
       .limit(1);
 
     if (existing?.length) {
@@ -291,7 +367,7 @@ router.post('/', [
       await autoAssignLead(lead.id, req.orgId, req.user.id);
     }
 
-    res.status(201).json(lead);
+    res.status(201).json(formatLeadResponse(lead));
   } catch (err) {
     console.error('[POST /leads]', err.message);
     res.status(500).json({ error: err.message });
@@ -302,7 +378,7 @@ router.post('/', [
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const rawUpdates = req.body;
 
     // Get current state for audit
     const { data: current } = await supabaseAdmin
@@ -314,6 +390,9 @@ router.put('/:id', async (req, res) => {
     if (req.userRole === 'executive' && current.assigned_to !== req.user.id) {
       return res.status(403).json({ error: 'Access denied' });
     }
+
+    // Sanitize updates to prevent schema cache / unrecognized column errors
+    const updates = sanitizeLeadPayload(rawUpdates);
 
     // Track stage change
     const stageChanged = updates.stage && updates.stage !== current.stage;
@@ -353,7 +432,7 @@ router.put('/:id', async (req, res) => {
       await updateLeadScore(id);
     }
 
-    res.json(lead);
+    res.json(formatLeadResponse(lead));
   } catch (err) {
     console.error('[PUT /leads/:id]', err.message);
     res.status(500).json({ error: err.message });
@@ -497,18 +576,24 @@ const capturePublicLead = async (req, res) => {
 
     if (!org) return res.status(400).json({ error: 'Organization not found' });
 
-    const leadData = {
-      org_id: org.id, name, phone, email,
-      source: source || 'Website Form', project_id: project_id || null,
-      budget_max: budget_max ? parseInt(budget_max) : null,
-      configuration, notes,
+    const rawLead = {
+      ...req.body,
+      org_id: org.id,
+      source: source || 'Website Form',
+      project_id: project_id || null,
       stage: 'New / Unassigned',
     };
 
+    const leadData = sanitizeLeadPayload(rawLead);
+    leadData.org_id = org.id;
+    leadData.stage = 'New / Unassigned';
+
     // Dedup check
+    const cleanPhone = String(phone).trim();
+    const cleanEmail = String(email || '').trim();
     const { data: existing } = await supabaseAdmin
       .from('leads').select('id').eq('org_id', org.id)
-      .or(`phone.eq.${phone}${email ? `,email.eq.${email}` : ''}`).limit(1);
+      .or(`phone.eq.${cleanPhone}${cleanEmail ? `,email.eq.${cleanEmail}` : ''}`).limit(1);
 
     if (existing?.length) {
       leadData.is_duplicate = true;

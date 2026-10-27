@@ -6,6 +6,19 @@ const { requireRole } = require('../middleware/rbac');
 const router = express.Router();
 router.use(authenticate);
 
+const ALLOWED_TASK_COLUMNS = [
+  'org_id', 'user_id', 'lead_id', 'type', 'title', 'description',
+  'due_date', 'status', 'priority', 'created_by', 'completed_at'
+];
+
+function formatTaskResponse(task) {
+  if (!task) return task;
+  return {
+    ...task,
+    completed: task.status === 'completed',
+  };
+}
+
 // GET /api/tasks
 router.get('/', async (req, res) => {
   try {
@@ -28,7 +41,7 @@ router.get('/', async (req, res) => {
 
     const { data, error, count } = await q;
     if (error) throw error;
-    res.json({ tasks: data || [], total: count || 0 });
+    res.json({ tasks: (data || []).map(formatTaskResponse), total: count || 0 });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -63,7 +76,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    res.status(201).json(data);
+    res.status(201).json(formatTaskResponse(data));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -72,14 +85,37 @@ router.post('/', async (req, res) => {
 // PUT /api/tasks/:id
 router.put('/:id', async (req, res) => {
   try {
-    const updates = req.body;
-    if (updates.status === 'completed' && !updates.completed_at) {
-      updates.completed_at = new Date().toISOString();
+    const rawUpdates = { ...req.body };
+
+    // Support mobile toggle { completed: true/false } without crashing on PostgREST schema cache
+    if (rawUpdates.completed !== undefined) {
+      if (rawUpdates.completed) {
+        rawUpdates.status = 'completed';
+        rawUpdates.completed_at = rawUpdates.completed_at || new Date().toISOString();
+      } else {
+        rawUpdates.status = 'pending';
+        rawUpdates.completed_at = null;
+      }
     }
+
+    if (rawUpdates.status === 'completed' && !rawUpdates.completed_at) {
+      rawUpdates.completed_at = new Date().toISOString();
+    } else if (rawUpdates.status === 'pending') {
+      rawUpdates.completed_at = null;
+    }
+
+    // Pick only allowed columns on tasks table
+    const updates = {};
+    for (const col of ALLOWED_TASK_COLUMNS) {
+      if (rawUpdates[col] !== undefined) {
+        updates[col] = rawUpdates[col];
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('tasks').update(updates).eq('id', req.params.id).eq('org_id', req.orgId).select().single();
     if (error) throw error;
-    res.json(data);
+    res.json(formatTaskResponse(data));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

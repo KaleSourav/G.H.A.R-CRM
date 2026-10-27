@@ -68,8 +68,9 @@ router.get('/', requireRole(['admin', 'manager', 'executive', 'super_admin']), a
 router.post('/', requireRole(['admin', 'super_admin']), async (req, res) => {
   try {
     const { name, email, phone, role, manager_id, password } = req.body;
-    if (!name || !email || !role || !password) {
-      return res.status(400).json({ error: 'name, email, role, and password are required' });
+    const finalPassword = password || 'Ghar@12345';
+    if (!name || !email || !role) {
+      return res.status(400).json({ error: 'name, email, and role are required' });
     }
 
     const isSuper = role === 'super_admin' || role === 'superadmin';
@@ -77,7 +78,7 @@ router.post('/', requireRole(['admin', 'super_admin']), async (req, res) => {
     // 1. Create auth user with metadata preserving super_admin status
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password,
+      password: finalPassword,
       email_confirm: true,
       user_metadata: {
         name,
