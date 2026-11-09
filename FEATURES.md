@@ -184,12 +184,20 @@ G.H.A.R CRM is a production-ready, full-stack real estate Customer Relationship 
 ---
 
 ### 11. 🔔 In-App Notifications (`/api/auth/notifications`)
-- Real-time notification center in top navigation bar with unread badge count.
-- Triggers on:
-  - New lead auto-assignments or reassignments.
-  - SLA breach alerts and manager escalations.
-  - CSV bulk import completion status.
+- Real-time notification center in top navigation bar with unread badge count (polls every 60 seconds).
+- **Follow-Up Reminder Service (`followUpReminder.js`)** — background cron running every **1 minute**:
+  - 🔔 `task_due` — alerts 15 minutes before any scheduled task is due.
+  - 🚨 `task_overdue` — alerts when a task passes its due date with no completion; also auto-marks task as `overdue`.
+  - 📞 `next_followup_at` — alerts 15 minutes before a lead's scheduled follow-up time arrives.
+  - Deduplication: won't re-notify within 20 minutes using `notified_at` on tasks table.
+- **SLA Timer Service (`slaTimer.js`)** — cron every 5 minutes:
+  - Fires `sla_breach` alerts for uncontacted leads past the org's SLA window.
+  - Escalates to the executive's manager automatically.
+- Triggers also on:
+  - New lead auto-assignments or reassignments (`lead_assigned`).
+  - CSV bulk import completion (`csv_import_complete`).
 - Single notification read toggle and "Mark All as Read" action.
+- **Security**: All notification queries are scoped to both `user_id` and `org_id`.
 
 ---
 

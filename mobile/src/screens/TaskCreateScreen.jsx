@@ -124,7 +124,8 @@ export default function TaskCreateScreen({ navigation, route }) {
       else if (selectedType === 'whatsapp') setTitle(`WhatsApp ${selectedLead.name} brochure and pricing`);
       else if (selectedType === 'site_visit') setTitle(`Site Visit with ${selectedLead.name}`);
       else if (selectedType === 'document') setTitle(`Review agreement with ${selectedLead.name}`);
-      else if (selectedType === 'meeting') setTitle(`Meeting with ${selectedLead.name}`);
+      else if (selectedType === 'email') setTitle(`Email ${selectedLead.name} property details`);
+      else setTitle(`Follow up with ${selectedLead.name}`);
     }
   };
 
@@ -158,9 +159,10 @@ export default function TaskCreateScreen({ navigation, route }) {
 
     setSubmitting(true);
     try {
+      const safeType = (['call', 'follow_up', 'site_visit', 'document', 'email', 'whatsapp', 'other'].includes(type)) ? type : 'other';
       const taskPayload = {
         title: title.trim(),
-        type,
+        type: safeType,
         description: description.trim() || undefined,
         due_date: calculateDueDate(dueDateOption),
         lead_id: selectedLeadId || undefined,
@@ -258,7 +260,7 @@ export default function TaskCreateScreen({ navigation, route }) {
                 { value: 'whatsapp', label: 'WhatsApp', icon: 'logo-whatsapp' },
                 { value: 'site_visit', label: 'Site Visit', icon: 'location' },
                 { value: 'follow_up', label: 'Follow Up', icon: 'refresh' },
-                { value: 'meeting', label: 'Meeting', icon: 'people' },
+                { value: 'email', label: 'Email', icon: 'mail' },
                 { value: 'document', label: 'Documents', icon: 'document-text' },
               ].map(t => (
                 <TouchableOpacity

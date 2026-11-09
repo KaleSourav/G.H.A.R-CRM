@@ -12,6 +12,7 @@ const dashboardRouter = require('./routes/dashboard');
 const teamRouter = require('./routes/team');
 const authRouter = require('./routes/auth');
 const { startSLATimer } = require('./services/slaTimer');
+const { startFollowUpReminder } = require('./services/followUpReminder');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -100,6 +101,8 @@ if (process.env.NODE_ENV !== 'test') {
     // Start SLA breach detection cron (every 5 minutes)
     startSLATimer();
     console.log('   SLA timer started (checks every 5 min)');
+    // Start follow-up reminder cron (every 1 minute)
+    startFollowUpReminder();
   });
 }
 

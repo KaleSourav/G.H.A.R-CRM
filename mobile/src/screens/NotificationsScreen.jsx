@@ -93,19 +93,28 @@ export default function NotificationsScreen({ navigation }) {
 
   const getNotifIcon = (type) => {
     switch (type) {
-      case 'lead':
+      case 'lead_assigned':
       case 'assigned':
         return { name: 'person-add', color: theme.primary };
+      case 'site_visit_reminder':
       case 'site_visit':
         return { name: 'calendar', color: theme.purple };
+      case 'sla_breach':
       case 'sla':
       case 'breach':
         return { name: 'alert-circle', color: theme.error };
-      case 'call':
-        return { name: 'call', color: theme.info };
+      case 'task_due':
+      case 'task_overdue':
       case 'task':
       case 'reminder':
         return { name: 'alarm', color: theme.warning };
+      case 'new_lead_captured':
+      case 'lead':
+        return { name: 'person-add', color: theme.primary };
+      case 'csv_import_complete':
+        return { name: 'cloud-upload', color: theme.info };
+      case 'call':
+        return { name: 'call', color: theme.info };
       default:
         return { name: 'notifications', color: theme.primary };
     }

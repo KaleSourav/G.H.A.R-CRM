@@ -16,6 +16,7 @@ router.get('/notifications', authenticate, async (req, res) => {
       .from('notifications')
       .select('*')
       .eq('user_id', req.user.id)
+      .eq('org_id', req.orgId)
       .order('created_at', { ascending: false })
       .limit(50);
     if (error) throw error;
