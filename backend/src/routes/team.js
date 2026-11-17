@@ -37,7 +37,7 @@ router.get('/', requireRole(['admin', 'manager', 'executive', 'super_admin']), a
       console.warn('[Team GET] Failed to list auth users:', e.message);
     }
 
-    const FOUNDER_EMAILS = ['vinaykarir@ghar.in', 'asif@ghar.in'];
+    const FOUNDER_EMAILS = ['vinaykarir@ghar.in', 'asif@ghar.in', 'sourav@ghar.in'];
 
     const enrichedUsers = (users || []).map(u => {
       const emailLower = (u.email || '').toLowerCase();

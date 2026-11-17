@@ -115,7 +115,7 @@ export default function TeamPage() {
       u.role === 'super_admin' ||
       u.role === 'superadmin' ||
       u.is_super_admin ||
-      ['vinaykarir@ghar.in', 'asif@ghar.in'].includes(u.email?.toLowerCase())
+      ['vinaykarir@ghar.in', 'asif@ghar.in', 'sourav@ghar.in'].includes(u.email?.toLowerCase())
     ) {
       displayRole = 'super_admin';
     }
