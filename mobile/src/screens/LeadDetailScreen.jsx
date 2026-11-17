@@ -8,6 +8,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { leadsAPI, tasksAPI, useAutoRefresh } from '../services/api';
 import {
+  scheduleFollowUpAlarm,
+  scheduleSnoozeAlarm,
+  cancelFollowUpAlarm,
+} from '../services/notificationService';
+import {
   formatPhone, formatCurrency, formatRelative, formatDateTime,
   getInitials, getWhatsAppUrl,
 } from '../utils/helpers';
@@ -269,6 +274,14 @@ export default function LeadDetailScreen({ route, navigation }) {
       if (diffSecs > 0) {
         setSnoozeCountdown(diffSecs);
         setReminderLabel('Follow-up Scheduled');
+        scheduleFollowUpAlarm({
+          id: leadId,
+          leadId,
+          leadName: lead.name,
+          phone: lead.phone,
+          title: lead.name,
+          date: lead.next_followup_at,
+        }).catch(() => {});
         if (!snoozeTimerRef.current) {
           snoozeTimerRef.current = setInterval(() => {
             setSnoozeCountdown(prev => {
@@ -302,9 +315,15 @@ export default function LeadDetailScreen({ route, navigation }) {
       const mins = Math.max(1, Number(minutes) || 5);
       const newTime = new Date(Date.now() + mins * 60 * 1000);
       await leadsAPI.snooze(leadId, { minutes: mins });
+      await scheduleSnoozeAlarm({
+        leadId,
+        leadName: lead?.name,
+        phone: lead?.phone,
+        minutes: mins,
+      });
       Alert.alert(
         'Follow-Up Snoozed',
-        `Snoozed by ${mins} minutes until ${newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        `Snoozed by ${mins} minutes until ${newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (Alarm re-armed)`
       );
       loadLead();
     } catch (err) {
@@ -321,8 +340,9 @@ export default function LeadDetailScreen({ route, navigation }) {
       setSnoozeActive(false);
       setSnoozeCountdown(0);
       setIsRepeating(false);
+      await cancelFollowUpAlarm(leadId);
       await leadsAPI.update(leadId, { next_followup_at: null });
-      Alert.alert('Reminder Cleared', 'Follow-up alert has been marked complete/cleared.');
+      Alert.alert('Reminder Cleared', 'Follow-up alert and alarm have been cleared.');
       loadLead();
     } catch (err) {
       Alert.alert('Error', err.message || 'Failed to clear reminder');
@@ -402,15 +422,26 @@ export default function LeadDetailScreen({ route, navigation }) {
         content: `Follow-up reminder set for ${formatDateTime(isoDate)}${repeatSnooze5Min ? ' (with continuous 5-min snooze)' : ''}`,
       });
 
-      // 4. Activate local timer for immediate visual countdown
+      // 4. Schedule system-level alarm (fires when app is closed / killed / screen locked)
+      await scheduleFollowUpAlarm({
+        id: leadId,
+        leadId,
+        leadName: lead?.name || 'Prospect',
+        phone: lead?.phone,
+        title: lead?.name || 'Prospect',
+        date: isoDate,
+        repeatMinutes: repeatSnooze5Min ? 5 : 0,
+      });
+
+      // 5. Activate local timer for immediate visual countdown
       activateTimer(secs, repeatSnooze5Min, label);
 
       Alert.alert(
-        'Follow-Up Set!',
-        `Alert scheduled for ${formatDateTime(isoDate)}.${repeatSnooze5Min ? ' (Continuous 5-minute snooze alert enabled).' : ''}`
+        'Follow-Up Alarm Set!',
+        `Alarm scheduled for ${formatDateTime(isoDate)}.${repeatSnooze5Min ? ' (Continuous 5-minute snooze alarm enabled).' : ''}\n\nThis alarm will ring even if the app is closed or phone is locked.`
       );
 
-      // 5. Reload lead to sync all tabs
+      // 6. Reload lead to sync all tabs
       loadLead();
     } catch (err) {
       Alert.alert('Error', err.message || 'Failed to save follow-up reminder');

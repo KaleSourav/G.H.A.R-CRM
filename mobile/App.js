@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { initNotificationService, scheduleSnoozeAlarm } from './src/services/notificationService';
+import { leadsAPI, tasksAPI } from './src/services/api';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -156,10 +159,53 @@ function RootNavigator() {
 }
 
 export default function App() {
+  const navigationRef = useRef(null);
+
+  useEffect(() => {
+    // 1. Initialize Android Alarm Channel and permissions
+    initNotificationService();
+
+    // 2. Global notification response listener (Taps on Lock Screen, Status Bar, or Action Buttons)
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response?.notification?.request?.content?.data || {};
+      const actionId = response?.actionIdentifier;
+
+      // Quick Snooze Action Button tapped from Lock Screen / Heads-Up notification
+      if (actionId === 'ACTION_SNOOZE_5M') {
+        scheduleSnoozeAlarm({
+          leadId: data.leadId,
+          taskId: data.taskId,
+          leadName: data.leadName,
+          phone: data.phone,
+          minutes: 5,
+        });
+        if (data.leadId) leadsAPI.snooze(data.leadId, { minutes: 5 }).catch(() => {});
+        if (data.taskId) tasksAPI.snooze(data.taskId, { minutes: 5 }).catch(() => {});
+        return;
+      }
+
+      // Call Now Action Button tapped from notification
+      if (actionId === 'ACTION_CALL' && data.phone) {
+        const digits = String(data.phone).replace(/\D/g, '').slice(-10);
+        Linking.openURL(`tel:+91${digits}`).catch(() => {});
+        return;
+      }
+
+      // Default tap: Navigate to Lead Detail or Tasks screen
+      if (data.leadId && navigationRef.current) {
+        navigationRef.current.navigate('LeadDetail', { leadId: data.leadId });
+      } else if (data.taskId && navigationRef.current) {
+        navigationRef.current.navigate('Tasks');
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <RootNavigator />
         </NavigationContainer>
       </AuthProvider>

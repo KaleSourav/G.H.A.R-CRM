@@ -6,6 +6,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { authAPI, leadsAPI, tasksAPI, useAutoRefresh } from '../services/api';
+import { scheduleSnoozeAlarm } from '../services/notificationService';
 import { useTheme } from '../context/ThemeContext';
 import { formatRelative } from '../utils/helpers';
 import AppHeader from '../components/AppHeader';
@@ -103,9 +104,15 @@ export default function NotificationsScreen({ navigation }) {
       } else if (item.lead_id) {
         await leadsAPI.snooze(item.lead_id, { minutes });
       }
+      await scheduleSnoozeAlarm({
+        leadId: item.lead_id,
+        taskId: item.task_id,
+        leadName: item.title,
+        minutes,
+      });
       await authAPI.readNotification(item.id).catch(() => {});
       setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, read: true } : n));
-      Alert.alert('Follow-Up Snoozed', `Reminder snoozed by ${minutes} minutes.`);
+      Alert.alert('Follow-Up Snoozed', `Reminder snoozed by ${minutes} minutes. Alarm re-armed.`);
       loadNotifications();
     } catch (err) {
       Alert.alert('Error', err.message || 'Failed to snooze follow-up');

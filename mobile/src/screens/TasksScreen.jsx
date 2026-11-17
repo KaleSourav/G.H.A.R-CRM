@@ -6,6 +6,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { tasksAPI, useAutoRefresh } from '../services/api';
+import { scheduleSnoozeAlarm, cancelFollowUpAlarm } from '../services/notificationService';
 import { Radius, Typography, Shadow } from '../theme/tokens';
 import { useTheme } from '../context/ThemeContext';
 import { TASK_TYPES } from '../utils/constants';
@@ -64,6 +65,9 @@ export default function TasksScreen({ navigation }) {
         status: newCompleted ? 'completed' : 'pending',
         completed: newCompleted,
       });
+      if (newCompleted) {
+        cancelFollowUpAlarm(task.id);
+      }
     } catch (err) {
       // Revert on failure
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, completed: isCompleted, status: isCompleted ? 'completed' : 'pending' } : t));
@@ -106,10 +110,17 @@ export default function TasksScreen({ navigation }) {
   const handleSnoozeTask = async (task, minutes, until) => {
     try {
       await tasksAPI.snooze(task.id, { minutes, until });
+      await scheduleSnoozeAlarm({
+        taskId: task.id,
+        leadId: task.lead_id || task.lead?.id,
+        leadName: task.lead?.name || task.title,
+        phone: task.lead?.phone,
+        minutes: minutes || 5,
+      });
       const targetTime = until
         ? new Date(until).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : new Date(Date.now() + minutes * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      Alert.alert('Task Snoozed', `Snoozed until ${targetTime}.`);
+      Alert.alert('Task Snoozed & Alarm Re-armed', `Alarm scheduled for ${targetTime}.`);
       loadTasks();
     } catch (err) {
       Alert.alert('Error', err.message || 'Failed to snooze task');

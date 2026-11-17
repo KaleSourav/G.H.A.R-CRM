@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { tasksAPI, leadsAPI } from '../services/api';
+import { scheduleFollowUpAlarm } from '../services/notificationService';
 import { Radius, Typography, Shadow } from '../theme/tokens';
 import { TASK_TYPES } from '../utils/constants';
 import { useTheme } from '../context/ThemeContext';
@@ -176,16 +177,31 @@ export default function TaskCreateScreen({ navigation, route }) {
         lead_id: selectedLeadId || undefined,
       };
 
-      await tasksAPI.create(taskPayload);
+      const res = await tasksAPI.create(taskPayload);
+      const createdId = res?.id || res?.data?.id;
 
       // If tied to a lead, also sync the lead's next_followup_at
       if (selectedLeadId) {
         await leadsAPI.update(selectedLeadId, { next_followup_at: calculatedDueDate }).catch(() => {});
       }
 
+      // Schedule Android system alarm (fires even if app is closed / screen off)
+      if (calculatedDueDate) {
+        await scheduleFollowUpAlarm({
+          id: createdId,
+          taskId: createdId,
+          leadId: selectedLeadId,
+          leadName: selectedLead?.name || title.trim(),
+          phone: selectedLead?.phone,
+          title: title.trim(),
+          date: calculatedDueDate,
+          repeatMinutes: snoozeAlert ? 5 : 0,
+        }).catch(() => {});
+      }
+
       Alert.alert(
         'Task Scheduled!',
-        `Task "${title.trim()}" created successfully.${notificationAlert ? ' In-app mobile reminder alert set.' : ''}${snoozeAlert ? ' (5-min snooze alert enabled).' : ''}`,
+        `Task "${title.trim()}" created successfully.${notificationAlert ? ' Follow-up alarm set.' : ''}${snoozeAlert ? ' (5-min snooze alarm enabled).' : ''}\n\nYour alarm will ring even if this app is closed.`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (err) {

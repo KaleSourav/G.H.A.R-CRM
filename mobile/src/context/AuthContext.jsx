@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { authAPI, leadsAPI, onDataMutation } from '../services/api';
+import { authAPI, leadsAPI, tasksAPI, onDataMutation } from '../services/api';
+import { syncUpcomingAlarmsFromLeadsAndTasks } from '../services/notificationService';
 
 const AuthContext = createContext(null);
 
@@ -91,6 +92,17 @@ export function AuthProvider({ children }) {
       const unsub = onDataMutation(() => {
         refreshAssignedStats();
       });
+
+      // Sync all upcoming leads & tasks with Android AlarmManager
+      Promise.all([
+        leadsAPI.list({ limit: 50 }).catch(() => null),
+        tasksAPI.list().catch(() => null),
+      ]).then(([leadsRes, tasksRes]) => {
+        const leads = leadsRes?.data || (Array.isArray(leadsRes) ? leadsRes : []);
+        const tasks = tasksRes?.data || (Array.isArray(tasksRes) ? tasksRes : []);
+        syncUpcomingAlarmsFromLeadsAndTasks(leads, tasks);
+      }).catch(() => {});
+
       return () => {
         clearInterval(interval);
         unsub?.();

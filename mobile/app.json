@@ -21,14 +21,30 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#0A0D14"
       },
-      "package": "com.ghar.crm"
+      "package": "com.ghar.crm",
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#E8A020",
+          "defaultChannel": "followup-alarm-channel"
+        }
+      ]
     ],
     "extra": {
       "eas": {
