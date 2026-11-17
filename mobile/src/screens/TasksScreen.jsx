@@ -71,6 +71,51 @@ export default function TasksScreen({ navigation }) {
     }
   };
 
+  const handleSnoozePrompt = (task) => {
+    Alert.alert(
+      '⏰ Snooze Task Reminder',
+      `Choose snooze duration for "${task.title}":`,
+      [
+        {
+          text: '+5 Min (Continuous)',
+          onPress: () => handleSnoozeTask(task, 5),
+        },
+        {
+          text: '+15 Min',
+          onPress: () => handleSnoozeTask(task, 15),
+        },
+        {
+          text: '+1 Hour',
+          onPress: () => handleSnoozeTask(task, 60),
+        },
+        {
+          text: 'Tomorrow 10 AM',
+          onPress: () => {
+            const tom = new Date();
+            tom.setDate(tom.getDate() + 1);
+            tom.setHours(10, 0, 0, 0);
+            const mins = Math.max(1, Math.round((tom.getTime() - Date.now()) / 60000));
+            handleSnoozeTask(task, mins, tom.toISOString());
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const handleSnoozeTask = async (task, minutes, until) => {
+    try {
+      await tasksAPI.snooze(task.id, { minutes, until });
+      const targetTime = until
+        ? new Date(until).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : new Date(Date.now() + minutes * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      Alert.alert('Task Snoozed', `Snoozed until ${targetTime}.`);
+      loadTasks();
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to snooze task');
+    }
+  };
+
   // Filter computations
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -226,17 +271,30 @@ export default function TasksScreen({ navigation }) {
                     </Text>
                   ) : null}
 
-                  {/* Bottom Meta Row: Due date + Linked lead */}
+                  {/* Bottom Meta Row: Due date + Snooze + Linked lead */}
                   <View style={styles.taskMetaRow}>
-                    <View style={[styles.dueBadge, taskIsOverdue && styles.dueBadgeOverdue]}>
-                      <Ionicons
-                        name="time-outline"
-                        size={11}
-                        color={taskIsOverdue ? theme.error : theme.textMuted}
-                      />
-                      <Text style={[styles.dueText, taskIsOverdue && styles.dueTextOverdue]}>
-                        {item.due_date ? formatDateTime(item.due_date) : 'No due date'}
-                      </Text>
+                    <View style={styles.metaLeftRow}>
+                      <View style={[styles.dueBadge, taskIsOverdue && styles.dueBadgeOverdue]}>
+                        <Ionicons
+                          name="time-outline"
+                          size={11}
+                          color={taskIsOverdue ? theme.error : theme.textMuted}
+                        />
+                        <Text style={[styles.dueText, taskIsOverdue && styles.dueTextOverdue]}>
+                          {item.due_date ? formatDateTime(item.due_date) : 'No due date'}
+                        </Text>
+                      </View>
+
+                      {!item.completed && (
+                        <TouchableOpacity
+                          style={styles.snoozeChip}
+                          onPress={() => handleSnoozePrompt(item)}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons name="alarm-outline" size={11} color={theme.warning} />
+                          <Text style={styles.snoozeChipText}>Snooze</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
 
                     {item.lead && (
@@ -448,6 +506,30 @@ function makeStyles(theme) {
       paddingTop: 6,
       borderTopWidth: 1,
       borderTopColor: theme.borderLight,
+      gap: 8,
+    },
+    metaLeftRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flexWrap: 'wrap',
+      flex: 1,
+    },
+    snoozeChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      backgroundColor: 'rgba(234, 179, 8, 0.12)',
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderRadius: Radius.xs,
+      borderWidth: 0.5,
+      borderColor: 'rgba(234, 179, 8, 0.3)',
+    },
+    snoozeChipText: {
+      fontSize: 10.5,
+      fontWeight: '700',
+      color: theme.warning,
     },
     dueBadge: {
       flexDirection: 'row',

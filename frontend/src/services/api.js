@@ -43,6 +43,7 @@ export const leadsAPI = {
   bulk: (action, leadIds, payload) => api.post('/leads/bulk', { action, lead_ids: leadIds, payload }),
   getAssignedStats: () => api.get('/leads/assigned-stats'),
   getExportData: (params) => api.get('/leads/export-excel-data', { params }),
+  snooze: (id, data) => api.post(`/leads/${id}/snooze`, data),
 };
 
 // ── Tasks ──────────────────────────────────────────────────────────────────
@@ -51,6 +52,7 @@ export const tasksAPI = {
   create: (data) => api.post('/tasks', data),
   update: (id, data) => api.put(`/tasks/${id}`, data),
   delete: (id) => api.delete(`/tasks/${id}`),
+  snooze: (id, data) => api.post(`/tasks/${id}/snooze`, data),
 };
 
 // ── Projects ───────────────────────────────────────────────────────────────

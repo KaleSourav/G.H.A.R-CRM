@@ -91,6 +91,7 @@ export const leadsAPI = {
   addActivity: (id, data) => request('POST', `/leads/${id}/activity`, data),
   getAssignedStats: () => request('GET', '/leads/assigned-stats'),
   bulk: (action, leadIds, payload) => request('POST', '/leads/bulk', { action, lead_ids: leadIds, payload }),
+  snooze: (id, data) => request('POST', `/leads/${id}/snooze`, data),
 };
 
 // ── Tasks ─────────────────────────────────────────────────────────────────
@@ -99,6 +100,7 @@ export const tasksAPI = {
   create: (data) => request('POST', '/tasks', data),
   update: (id, data) => request('PUT', `/tasks/${id}`, data),
   delete: (id) => request('DELETE', `/tasks/${id}`),
+  snooze: (id, data) => request('POST', `/tasks/${id}/snooze`, data),
 };
 
 // ── Projects ──────────────────────────────────────────────────────────────

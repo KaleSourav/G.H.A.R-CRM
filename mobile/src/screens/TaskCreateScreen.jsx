@@ -160,15 +160,28 @@ export default function TaskCreateScreen({ navigation, route }) {
     setSubmitting(true);
     try {
       const safeType = (['call', 'follow_up', 'site_visit', 'document', 'email', 'whatsapp', 'other'].includes(type)) ? type : 'other';
+      const calculatedDueDate = calculateDueDate(dueDateOption);
+      
+      const descParts = [description.trim()];
+      if (snoozeAlert) {
+        descParts.push('[SNOOZE_REPEAT_5M] Continuous 5-minute repeating snooze alert active');
+      }
+      const finalDescription = descParts.filter(Boolean).join('\n');
+
       const taskPayload = {
         title: title.trim(),
         type: safeType,
-        description: description.trim() || undefined,
-        due_date: calculateDueDate(dueDateOption),
+        description: finalDescription || undefined,
+        due_date: calculatedDueDate,
         lead_id: selectedLeadId || undefined,
       };
 
       await tasksAPI.create(taskPayload);
+
+      // If tied to a lead, also sync the lead's next_followup_at
+      if (selectedLeadId) {
+        await leadsAPI.update(selectedLeadId, { next_followup_at: calculatedDueDate }).catch(() => {});
+      }
 
       Alert.alert(
         'Task Scheduled!',

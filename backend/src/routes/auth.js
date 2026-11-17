@@ -20,7 +20,13 @@ router.get('/notifications', authenticate, async (req, res) => {
       .order('created_at', { ascending: false })
       .limit(50);
     if (error) throw error;
-    res.json(data || []);
+    // Normalize read and message properties for cross-client compatibility
+    const normalized = (data || []).map(n => ({
+      ...n,
+      read: Boolean(n.read_status),
+      message: n.content || n.message || n.title || '',
+    }));
+    res.json(normalized);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

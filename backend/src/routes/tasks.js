@@ -131,6 +131,60 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// POST /api/tasks/:id/snooze — snooze a task by minutes or until a specific ISO date
+router.post('/:id/snooze', async (req, res) => {
+  try {
+    const { minutes, until } = req.body;
+    let newDueDate;
+    if (until) {
+      newDueDate = new Date(until).toISOString();
+    } else {
+      const mins = Math.max(1, Number(minutes) || 5);
+      newDueDate = new Date(Date.now() + mins * 60 * 1000).toISOString();
+    }
+
+    const { data: task, error } = await supabaseAdmin
+      .from('tasks')
+      .update({
+        due_date: newDueDate,
+        status: 'pending',
+        notified_at: null,
+      })
+      .eq('id', req.params.id)
+      .eq('org_id', req.orgId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // If task has linked lead, also update lead's next_followup_at
+    if (task.lead_id) {
+      await supabaseAdmin
+        .from('leads')
+        .update({
+          next_followup_at: newDueDate,
+          last_activity_at: new Date().toISOString(),
+        })
+        .eq('id', task.lead_id)
+        .eq('org_id', req.orgId);
+
+      await supabaseAdmin.from('lead_activities').insert({
+        lead_id: task.lead_id,
+        user_id: req.user.id,
+        org_id: req.orgId,
+        type: 'note',
+        content: `Task "${task.title}" snoozed until ${new Date(newDueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        metadata: { task_id: task.id, new_due_date: newDueDate },
+      });
+    }
+
+    res.json(formatTaskResponse(task));
+  } catch (err) {
+    console.error('[POST /tasks/:id/snooze]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/tasks/overdue-check — mark overdue tasks (called by cron or manually)
 router.post('/overdue-check', requireRole(['admin']), async (req, res) => {
   try {

@@ -106,6 +106,26 @@ export default function LeadDetailPage() {
     } catch { toast.error('Reassign failed'); }
   };
 
+  const handleSnoozeLead = async (minutes = 5) => {
+    try {
+      await leadsAPI.snooze(id, { minutes });
+      toast.success(`Follow-up snoozed by ${minutes} minutes`);
+      loadLead();
+    } catch {
+      toast.error('Failed to snooze follow-up');
+    }
+  };
+
+  const handleSnoozeTask = async (taskId, minutes = 5) => {
+    try {
+      await tasksAPI.snooze(taskId, { minutes });
+      toast.success(`Task snoozed by ${minutes} minutes`);
+      loadLead();
+    } catch {
+      toast.error('Failed to snooze task');
+    }
+  };
+
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><span className="spinner" style={{ width: 32, height: 32 }} /></div>;
   }
@@ -404,7 +424,22 @@ export default function LeadDetailPage() {
               { label: 'Configuration', value: lead.configuration || '—' },
               { label: 'Location Pref.', value: lead.location_pref || '—' },
               { label: 'Purpose', value: lead.purpose?.replace('_', ' ') || '—' },
-              { label: 'Next Follow-up', value: lead.next_followup_at ? formatDateTime(lead.next_followup_at) : '—' },
+              {
+                label: 'Next Follow-up',
+                value: lead.next_followup_at ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>{formatDateTime(lead.next_followup_at)}</span>
+                    <button
+                      onClick={() => handleSnoozeLead(5)}
+                      className="btn btn-ghost btn-xs"
+                      style={{ padding: '1px 5px', fontSize: '0.65rem', color: 'var(--color-warning)', border: '1px solid var(--color-warning)' }}
+                      title="Quick Snooze by 5 mins"
+                    >
+                      +5m
+                    </button>
+                  </span>
+                ) : '—'
+              },
               { label: 'First Contacted', value: lead.first_contacted_at ? formatDateTime(lead.first_contacted_at) : 'Not yet' },
             ].map(item => (
               <div key={item.label} style={{
@@ -443,6 +478,16 @@ export default function LeadDetailPage() {
                     }
                     <span style={{ flex: 1, textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>{task.title}</span>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{formatDateTime(task.due_date)}</span>
+                    {task.status !== 'completed' && (
+                      <button
+                        onClick={() => handleSnoozeTask(task.id, 5)}
+                        className="btn btn-ghost btn-xs"
+                        style={{ padding: '1px 5px', fontSize: '0.65rem', color: 'var(--color-warning)' }}
+                        title="Snooze 5 mins"
+                      >
+                        +5m
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

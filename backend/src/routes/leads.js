@@ -161,7 +161,14 @@ router.get('/assigned-stats', async (req, res) => {
       .eq('org_id', orgId)
       .eq('assigned_to', user.id);
 
-    // 2. Unread assignment notifications
+    // 2. Unread notifications counts
+    const { count: unreadNotifsCount } = await supabaseAdmin
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .eq('user_id', user.id)
+      .eq('read_status', false);
+
     const { count: unreadAssignmentNotifs } = await supabaseAdmin
       .from('notifications')
       .select('id', { count: 'exact', head: true })
@@ -169,6 +176,25 @@ router.get('/assigned-stats', async (req, res) => {
       .eq('user_id', user.id)
       .eq('type', 'lead_assigned')
       .eq('read_status', false);
+
+    const { count: unreadTaskDueNotifs } = await supabaseAdmin
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .eq('user_id', user.id)
+      .in('type', ['task_due', 'task_overdue'])
+      .eq('read_status', false);
+
+    // 2b. Due or overdue follow-up leads
+    const nowIso = new Date().toISOString();
+    const soonIso = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const { count: dueFollowUpsCount } = await supabaseAdmin
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .eq('assigned_to', user.id)
+      .lte('next_followup_at', soonIso)
+      .not('stage', 'in', '("Lost / Dropped","Sold / Closed Won")');
 
     // 3. New uncontacted leads assigned to me
     const { count: newAssignedCount } = await supabaseAdmin
@@ -202,10 +228,13 @@ router.get('/assigned-stats', async (req, res) => {
     res.json({
       assignedToMeCount: assignedToMeCount || 0,
       unreadAssignmentNotifs: unreadAssignmentNotifs || 0,
+      unreadNotifsCount: unreadNotifsCount || 0,
+      unreadTaskDueNotifs: unreadTaskDueNotifs || 0,
+      dueFollowUpsCount: dueFollowUpsCount || 0,
       newAssignedCount: newAssignedCount || 0,
       unassignedCount: unassignedCount || 0,
       totalLeadsCount: totalLeadsCount || 0,
-      hasPendingAlert: (unreadAssignmentNotifs || 0) > 0 || (newAssignedCount || 0) > 0,
+      hasPendingAlert: (unreadNotifsCount || 0) > 0 || (dueFollowUpsCount || 0) > 0 || (newAssignedCount || 0) > 0,
       teamMembers: teamMembers || [],
     });
   } catch (err) {
@@ -448,6 +477,63 @@ router.post('/:id/reassign', requireRole(['admin', 'manager', 'executive', 'supe
     await reassignLead(req.params.id, to_user_id, req.user.id, req.orgId);
     res.json({ message: 'Lead reassigned successfully' });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/leads/:id/snooze ─────────────────────────────────────────────
+// Snooze lead follow-up reminder by minutes or to a specific ISO date
+router.post('/:id/snooze', async (req, res) => {
+  try {
+    const { minutes, until } = req.body;
+    let newFollowupDate;
+    if (until) {
+      newFollowupDate = new Date(until).toISOString();
+    } else {
+      const mins = Math.max(1, Number(minutes) || 5);
+      newFollowupDate = new Date(Date.now() + mins * 60 * 1000).toISOString();
+    }
+
+    const { data: lead, error } = await supabaseAdmin
+      .from('leads')
+      .update({
+        next_followup_at: newFollowupDate,
+        last_activity_at: new Date().toISOString(),
+      })
+      .eq('id', req.params.id)
+      .eq('org_id', req.orgId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Also update any pending follow-up task for this lead
+    await supabaseAdmin
+      .from('tasks')
+      .update({
+        due_date: newFollowupDate,
+        status: 'pending',
+        notified_at: null,
+      })
+      .eq('lead_id', req.params.id)
+      .eq('org_id', req.orgId)
+      .eq('type', 'follow_up')
+      .in('status', ['pending', 'overdue']);
+
+    // Log activity
+    const timeFormatted = new Date(newFollowupDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    await supabaseAdmin.from('lead_activities').insert({
+      lead_id: req.params.id,
+      user_id: req.user.id,
+      org_id: req.orgId,
+      type: 'note',
+      content: `Follow-up snoozed until ${timeFormatted} (${new Date(newFollowupDate).toLocaleDateString()})`,
+      metadata: { next_followup_at: newFollowupDate },
+    });
+
+    res.json(formatLeadResponse(lead));
+  } catch (err) {
+    console.error('[POST /leads/:id/snooze]', err.message);
     res.status(500).json({ error: err.message });
   }
 });

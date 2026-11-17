@@ -212,7 +212,7 @@ export default function LeadDetailScreen({ route, navigation }) {
     if (url) Linking.openURL(url);
   };
 
-  // ── Enhanced Snooze & Follow-up Reminder ─────────────────────────────────
+  // ── Enhanced Snooze & Follow-up Reminder (Fully Persisted to Database) ──
   const activateTimer = (targetSecs, repeatEnabled, label) => {
     if (snoozeTimerRef.current) clearInterval(snoozeTimerRef.current);
 
@@ -233,20 +233,22 @@ export default function LeadDetailScreen({ route, navigation }) {
               [
                 { text: 'Call Now', onPress: () => { handleDirectCall(lead?.phone?.replace(/\D/g, '').slice(-10)); } },
                 { text: 'WhatsApp', onPress: handleDirectWhatsApp },
-                { text: 'Keep Snoozing', style: 'cancel' },
+                { text: 'Snooze 5M', onPress: () => handleSnoozeMinutes(5) },
               ]
             );
             return 5 * 60; // reset to 5 mins
           } else {
             clearInterval(snoozeTimerRef.current);
-            setSnoozeActive(false);
+            snoozeTimerRef.current = null;
+            setSnoozeActive(true);
             Alert.alert(
               '⏰ Follow-Up Reminder Due',
               `Time to contact ${lead?.name || 'client'}!`,
               [
                 { text: 'Call Now', onPress: () => { handleDirectCall(lead?.phone?.replace(/\D/g, '').slice(-10)); } },
                 { text: 'WhatsApp', onPress: handleDirectWhatsApp },
-                { text: 'Dismiss', style: 'cancel' },
+                { text: 'Snooze 5M', onPress: () => handleSnoozeMinutes(5) },
+                { text: 'Dismiss', onPress: handleClearReminder, style: 'cancel' },
               ]
             );
             return 0;
@@ -257,81 +259,166 @@ export default function LeadDetailScreen({ route, navigation }) {
     }, 1000);
   };
 
-  const handleSetReminderSubmit = () => {
-    let secs = 5 * 60;
+  // Sync reminder banner countdown whenever lead.next_followup_at loads from database
+  useEffect(() => {
+    if (lead?.next_followup_at) {
+      const targetTime = new Date(lead.next_followup_at).getTime();
+      const now = Date.now();
+      const diffSecs = Math.round((targetTime - now) / 1000);
+      setSnoozeActive(true);
+      if (diffSecs > 0) {
+        setSnoozeCountdown(diffSecs);
+        setReminderLabel('Follow-up Scheduled');
+        if (!snoozeTimerRef.current) {
+          snoozeTimerRef.current = setInterval(() => {
+            setSnoozeCountdown(prev => {
+              if (prev <= 1) {
+                if (snoozeTimerRef.current) {
+                  clearInterval(snoozeTimerRef.current);
+                  snoozeTimerRef.current = null;
+                }
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      } else {
+        setSnoozeCountdown(0);
+        setReminderLabel('Follow-up Overdue!');
+      }
+    } else {
+      if (snoozeTimerRef.current) {
+        clearInterval(snoozeTimerRef.current);
+        snoozeTimerRef.current = null;
+      }
+      setSnoozeActive(false);
+      setSnoozeCountdown(0);
+    }
+  }, [lead?.next_followup_at]);
+
+  const handleSnoozeMinutes = async (minutes) => {
+    try {
+      const mins = Math.max(1, Number(minutes) || 5);
+      const newTime = new Date(Date.now() + mins * 60 * 1000);
+      await leadsAPI.snooze(leadId, { minutes: mins });
+      Alert.alert(
+        'Follow-Up Snoozed',
+        `Snoozed by ${mins} minutes until ${newTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      );
+      loadLead();
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to snooze follow-up');
+    }
+  };
+
+  const handleClearReminder = async () => {
+    try {
+      if (snoozeTimerRef.current) {
+        clearInterval(snoozeTimerRef.current);
+        snoozeTimerRef.current = null;
+      }
+      setSnoozeActive(false);
+      setSnoozeCountdown(0);
+      setIsRepeating(false);
+      await leadsAPI.update(leadId, { next_followup_at: null });
+      Alert.alert('Reminder Cleared', 'Follow-up alert has been marked complete/cleared.');
+      loadLead();
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to clear reminder');
+    }
+  };
+
+  const handleSetReminderSubmit = async () => {
+    let targetDate = new Date();
     let label = '5 Min Reminder';
+    let secs = 5 * 60;
 
     if (reminderPreset === 'custom') {
-      const target = parseCustomDateTime(reminderManualDate, reminderManualTime);
-      secs = Math.max(Math.round((target.getTime() - Date.now()) / 1000), 60);
+      targetDate = parseCustomDateTime(reminderManualDate, reminderManualTime);
+      secs = Math.max(Math.round((targetDate.getTime() - Date.now()) / 1000), 60);
       label = `${reminderManualDate} at ${reminderManualTime}`;
+    } else if (reminderPreset === '5m') {
+      targetDate = new Date(Date.now() + 5 * 60 * 1000);
+      secs = 5 * 60;
+      label = '5 Min Reminder';
     } else if (reminderPreset === '15m') {
+      targetDate = new Date(Date.now() + 15 * 60 * 1000);
       secs = 15 * 60;
       label = '15 Min Reminder';
     } else if (reminderPreset === '1h') {
+      targetDate = new Date(Date.now() + 60 * 60 * 1000);
       secs = 60 * 60;
       label = '1 Hour Reminder';
     } else if (reminderPreset === 'today_eve') {
       const now = new Date();
-      const eve = new Date();
-      eve.setHours(18, 0, 0, 0);
-      secs = Math.max(Math.round((eve.getTime() - now.getTime()) / 1000), 5 * 60);
+      targetDate = new Date();
+      targetDate.setHours(18, 0, 0, 0);
+      if (targetDate.getTime() <= now.getTime()) {
+        targetDate = new Date(Date.now() + 30 * 60 * 1000);
+      }
+      secs = Math.max(Math.round((targetDate.getTime() - now.getTime()) / 1000), 5 * 60);
       label = 'Today 6:00 PM';
     } else if (reminderPreset === 'tomorrow_morn') {
       const now = new Date();
-      const tmrw = new Date();
-      tmrw.setDate(tmrw.getDate() + 1);
-      tmrw.setHours(10, 0, 0, 0);
-      secs = Math.max(Math.round((tmrw.getTime() - now.getTime()) / 1000), 10 * 60);
+      targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 1);
+      targetDate.setHours(10, 0, 0, 0);
+      secs = Math.max(Math.round((targetDate.getTime() - now.getTime()) / 1000), 10 * 60);
       label = 'Tomorrow 10:00 AM';
     } else if (reminderPreset === 'tomorrow_eve') {
       const now = new Date();
-      const tmrw = new Date();
-      tmrw.setDate(tmrw.getDate() + 1);
-      tmrw.setHours(18, 0, 0, 0);
-      secs = Math.max(Math.round((tmrw.getTime() - now.getTime()) / 1000), 10 * 60);
+      targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 1);
+      targetDate.setHours(18, 0, 0, 0);
+      secs = Math.max(Math.round((targetDate.getTime() - now.getTime()) / 1000), 10 * 60);
       label = 'Tomorrow 6:00 PM';
     }
 
-    // Double confirmation if 5-minute repeating snooze is toggled on (Request 6)
-    if (repeatSnooze5Min) {
+    const isoDate = targetDate.toISOString();
+    setShowReminderModal(false);
+
+    try {
+      // 1. Persist directly to Supabase leads table
+      await leadsAPI.update(leadId, { next_followup_at: isoDate });
+
+      // 2. Persist to tasks table for unified scheduling & SLA tracking
+      const taskDesc = repeatSnooze5Min
+        ? '[SNOOZE_REPEAT_5M] Follow-up reminder with 5-minute repeating snooze'
+        : 'Scheduled follow-up reminder';
+
+      await tasksAPI.create({
+        lead_id: leadId,
+        title: `Follow up with ${lead?.name || 'client'}`,
+        type: 'follow_up',
+        due_date: isoDate,
+        priority: 'high',
+        description: taskDesc,
+      });
+
+      // 3. Log activity timeline event
+      await leadsAPI.addActivity(leadId, {
+        type: 'note',
+        content: `Follow-up reminder set for ${formatDateTime(isoDate)}${repeatSnooze5Min ? ' (with continuous 5-min snooze)' : ''}`,
+      });
+
+      // 4. Activate local timer for immediate visual countdown
+      activateTimer(secs, repeatSnooze5Min, label);
+
       Alert.alert(
-        'Confirm 5-Min Repeat Snooze',
-        `Repeat snooze every 5 minutes is enabled for ${lead?.name || 'this lead'}. You will receive continuous alerts every 5 minutes until completed. Proceed?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Yes, Continue',
-            onPress: () => {
-              // 2nd Confirmation
-              Alert.alert(
-                'Final Confirmation',
-                'Please re-confirm: Continuous recurring alerts will sound every 5 minutes for this client. Activate now?',
-                [
-                  {
-                    text: 'Disable Repeat',
-                    onPress: () => activateTimer(secs, false, label),
-                  },
-                  {
-                    text: 'Confirm & Activate',
-                    onPress: () => activateTimer(secs, true, `${label} (Repeat 5m)`),
-                  },
-                ]
-              );
-            },
-          },
-        ]
+        'Follow-Up Set!',
+        `Alert scheduled for ${formatDateTime(isoDate)}.${repeatSnooze5Min ? ' (Continuous 5-minute snooze alert enabled).' : ''}`
       );
-    } else {
-      activateTimer(secs, false, label);
+
+      // 5. Reload lead to sync all tabs
+      loadLead();
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to save follow-up reminder');
     }
   };
 
   const cancelSnooze = () => {
-    if (snoozeTimerRef.current) clearInterval(snoozeTimerRef.current);
-    setSnoozeActive(false);
-    setSnoozeCountdown(0);
-    setIsRepeating(false);
+    handleClearReminder();
   };
 
   const formatSnoozeTime = (secs) => {
@@ -747,39 +834,104 @@ export default function LeadDetailScreen({ route, navigation }) {
         </View>
 
         {/* ── Follow-up Reminder & Snooze Banner ──────────────────────────── */}
-        <View style={[styles.snoozeCard, snoozeActive && { borderColor: `${theme.warning}50`, backgroundColor: `${theme.warning}10` }]}>
-          <View style={styles.snoozeLeft}>
-            <Ionicons name="alarm-outline" size={20} color={snoozeActive ? theme.warning : theme.textMuted} />
-            <View style={{ marginLeft: 10, flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.snoozeTitle}>
-                  {snoozeActive ? reminderLabel : 'Follow-up Reminder & Snooze'}
-                </Text>
-                {isRepeating && (
-                  <View style={{ backgroundColor: `${theme.warning}25`, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                    <Text style={{ fontSize: 9.5, fontWeight: '800', color: theme.warning }}>REPEAT 5M</Text>
+        {(() => {
+          const hasReminder = Boolean(lead?.next_followup_at);
+          let isOverdue = false;
+          let diffSecs = 0;
+          if (hasReminder) {
+            const target = new Date(lead.next_followup_at);
+            diffSecs = Math.round((target.getTime() - Date.now()) / 1000);
+            isOverdue = diffSecs <= 0;
+          }
+
+          return (
+            <View style={[
+              styles.snoozeCard,
+              hasReminder && (isOverdue
+                ? { borderColor: `${theme.error}60`, backgroundColor: `${theme.error}14` }
+                : { borderColor: `${theme.warning}60`, backgroundColor: `${theme.warning}10` }
+              )
+            ]}>
+              <View style={styles.snoozeLeft}>
+                <Ionicons
+                  name={hasReminder ? (isOverdue ? 'alert-circle' : 'alarm') : 'alarm-outline'}
+                  size={20}
+                  color={hasReminder ? (isOverdue ? theme.error : theme.warning) : theme.textMuted}
+                />
+                <View style={{ marginLeft: 10, flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <Text style={[styles.snoozeTitle, hasReminder && isOverdue && { color: theme.error }]}>
+                      {hasReminder
+                        ? (isOverdue ? 'Follow-Up Overdue!' : 'Follow-Up Scheduled')
+                        : 'Follow-up Reminder & Snooze'}
+                    </Text>
+                    {hasReminder && (
+                      <View style={{
+                        backgroundColor: isOverdue ? `${theme.error}25` : `${theme.warning}25`,
+                        paddingHorizontal: 6,
+                        paddingVertical: 1.5,
+                        borderRadius: 4,
+                      }}>
+                        <Text style={{
+                          fontSize: 9.5,
+                          fontWeight: '800',
+                          color: isOverdue ? theme.error : theme.warning,
+                        }}>
+                          {isOverdue ? 'DUE NOW' : (snoozeCountdown > 0 ? formatSnoozeTime(snoozeCountdown) : 'UPCOMING')}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                )}
+                  <Text style={styles.snoozeSub}>
+                    {hasReminder
+                      ? `${isOverdue ? 'Was due' : 'Due'}: ${formatDateTime(lead.next_followup_at)}`
+                      : 'Set custom date/time or continuous 5-min repeat reminder'}
+                  </Text>
+                </View>
               </View>
-              <Text style={styles.snoozeSub}>
-                {snoozeActive
-                  ? `Alert in ${formatSnoozeTime(snoozeCountdown)} (tap dismiss or complete)`
-                  : 'Set custom date/time or continuous 5-min repeat reminder'}
-              </Text>
+
+              {/* Action Buttons */}
+              {hasReminder ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  {/* Quick Snooze 5 Min */}
+                  <TouchableOpacity
+                    style={[styles.snoozeBtn, { backgroundColor: `${theme.warning}20`, borderColor: `${theme.warning}50`, paddingHorizontal: 7 }]}
+                    onPress={() => handleSnoozeMinutes(5)}
+                  >
+                    <Ionicons name="refresh" size={12} color={theme.warning} />
+                    <Text style={[styles.snoozeBtnText, { color: theme.warning, fontSize: 11 }]}>+5m</Text>
+                  </TouchableOpacity>
+
+                  {/* Change Date/Time */}
+                  <TouchableOpacity
+                    style={[styles.snoozeBtn, { backgroundColor: `${theme.primary}18`, borderColor: `${theme.primary}40`, paddingHorizontal: 7 }]}
+                    onPress={() => setShowReminderModal(true)}
+                  >
+                    <Ionicons name="create-outline" size={12} color={theme.primary} />
+                    <Text style={[styles.snoozeBtnText, { color: theme.primary, fontSize: 11 }]}>Edit</Text>
+                  </TouchableOpacity>
+
+                  {/* Mark Done / Clear */}
+                  <TouchableOpacity
+                    style={[styles.snoozeBtn, { backgroundColor: `${theme.error}15`, borderColor: `${theme.error}40`, paddingHorizontal: 7 }]}
+                    onPress={handleClearReminder}
+                  >
+                    <Ionicons name="close-circle-outline" size={12} color={theme.error} />
+                    <Text style={[styles.snoozeBtnText, { color: theme.error, fontSize: 11 }]}>Clear</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.snoozeBtn, { backgroundColor: `${theme.warning}15`, borderColor: `${theme.warning}40` }]}
+                  onPress={() => setShowReminderModal(true)}
+                >
+                  <Ionicons name="timer-outline" size={15} color={theme.warning} />
+                  <Text style={[styles.snoozeBtnText, { color: theme.warning }]}>Set Reminder</Text>
+                </TouchableOpacity>
+              )}
             </View>
-          </View>
-          {snoozeActive ? (
-            <TouchableOpacity style={[styles.snoozeBtn, { backgroundColor: `${theme.error}15`, borderColor: `${theme.error}40` }]} onPress={cancelSnooze}>
-              <Ionicons name="close-circle-outline" size={15} color={theme.error} />
-              <Text style={[styles.snoozeBtnText, { color: theme.error }]}>Cancel</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={[styles.snoozeBtn, { backgroundColor: `${theme.warning}15`, borderColor: `${theme.warning}40` }]} onPress={() => setShowReminderModal(true)}>
-              <Ionicons name="timer-outline" size={15} color={theme.warning} />
-              <Text style={[styles.snoozeBtnText, { color: theme.warning }]}>Set Reminder</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+          );
+        })()}
 
         {/* ── Quick Log Interaction Box ────────────────────────────────────── */}
         <View style={styles.quickLogCard}>

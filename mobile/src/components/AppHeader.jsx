@@ -23,10 +23,10 @@ export default function AppHeader({
     import('../services/api').then(({ authAPI }) => {
       authAPI.notifications().then(res => {
         const list = res?.data || (Array.isArray(res) ? res : []);
-        const unread = list.filter(n => !n.read).length;
-        setUnreadCount(unread || assignedStats?.newAssignedCount || 0);
+        const unread = list.filter(n => !(n.read_status !== undefined ? n.read_status : n.read)).length;
+        setUnreadCount(unread || assignedStats?.unreadNotifsCount || assignedStats?.newAssignedCount || 0);
       }).catch(() => {
-        setUnreadCount(assignedStats?.newAssignedCount || 0);
+        setUnreadCount(assignedStats?.unreadNotifsCount || assignedStats?.newAssignedCount || 0);
       });
     }).catch(() => {});
   }, [assignedStats]);

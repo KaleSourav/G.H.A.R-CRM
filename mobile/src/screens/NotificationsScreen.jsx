@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { authAPI, useAutoRefresh } from '../services/api';
+import { authAPI, leadsAPI, tasksAPI, useAutoRefresh } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import { formatRelative } from '../utils/helpers';
 import AppHeader from '../components/AppHeader';
@@ -23,7 +23,12 @@ export default function NotificationsScreen({ navigation }) {
       const res = await authAPI.notifications().catch(() => null);
       const list = res?.data || (Array.isArray(res) ? res : []);
       if (list && list.length > 0) {
-        setNotifications(list);
+        const normalized = list.map(n => ({
+          ...n,
+          read: n.read_status !== undefined ? Boolean(n.read_status) : Boolean(n.read),
+          message: n.content || n.message || n.body || '',
+        }));
+        setNotifications(normalized);
       } else {
         // Fallback realistic system notifications if server returns empty
         setNotifications([
@@ -88,6 +93,22 @@ export default function NotificationsScreen({ navigation }) {
       navigation.navigate('LeadDetail', { leadId: item.lead_id });
     } else if (item.task_id) {
       navigation.navigate('Tasks');
+    }
+  };
+
+  const handleQuickSnoozeNotif = async (item, minutes = 5) => {
+    try {
+      if (item.task_id) {
+        await tasksAPI.snooze(item.task_id, { minutes });
+      } else if (item.lead_id) {
+        await leadsAPI.snooze(item.lead_id, { minutes });
+      }
+      await authAPI.readNotification(item.id).catch(() => {});
+      setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, read: true } : n));
+      Alert.alert('Follow-Up Snoozed', `Reminder snoozed by ${minutes} minutes.`);
+      loadNotifications();
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to snooze follow-up');
     }
   };
 
@@ -179,11 +200,24 @@ export default function NotificationsScreen({ navigation }) {
                   <Text style={styles.notifMessage} numberOfLines={2}>
                     {item.message || item.body || item.content || ''}
                   </Text>
-                  {item.created_at ? (
-                    <Text style={styles.notifTime}>
-                      {formatRelative(item.created_at)}
-                    </Text>
-                  ) : null}
+                  <View style={styles.notifFooterRow}>
+                    {item.created_at ? (
+                      <Text style={styles.notifTime}>
+                        {formatRelative(item.created_at)}
+                      </Text>
+                    ) : <View />}
+
+                    {(item.type === 'task_due' || item.type === 'task_overdue' || item.lead_id || item.task_id) && !item.read && (
+                      <TouchableOpacity
+                        style={styles.notifSnoozeBtn}
+                        onPress={() => handleQuickSnoozeNotif(item, 5)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="alarm-outline" size={12} color={theme.warning} />
+                        <Text style={styles.notifSnoozeText}>+5m Snooze</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
 
                 {item.lead_id ? (
@@ -297,7 +331,29 @@ function makeStyles(theme) {
     notifTime: {
       fontSize: 11,
       color: theme.textMuted,
+    },
+    notifFooterRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       marginTop: 6,
+      paddingTop: 4,
+    },
+    notifSnoozeBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      backgroundColor: 'rgba(234, 179, 8, 0.12)',
+      paddingHorizontal: 7,
+      paddingVertical: 2.5,
+      borderRadius: 4,
+      borderWidth: 0.5,
+      borderColor: 'rgba(234, 179, 8, 0.3)',
+    },
+    notifSnoozeText: {
+      fontSize: 10.5,
+      fontWeight: '700',
+      color: theme.warning,
     },
     arrow: {
       alignSelf: 'center',
