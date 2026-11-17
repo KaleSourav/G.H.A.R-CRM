@@ -16,6 +16,19 @@ async function checkFollowUpReminders() {
     const ago5Min = new Date(now.getTime() - 4.5 * 60 * 1000);
     const ago15Min = new Date(now.getTime() - 14 * 60 * 1000);
 
+    // Fetch active admins & super admins to ensure leadership receives critical follow-up alerts
+    const { data: orgAdmins } = await supabaseAdmin
+      .from('users')
+      .select('id, org_id')
+      .eq('status', 'active')
+      .in('role', ['admin', 'super_admin', 'superadmin']);
+
+    const adminUserIdsByOrg = {};
+    for (const a of orgAdmins || []) {
+      if (!adminUserIdsByOrg[a.org_id]) adminUserIdsByOrg[a.org_id] = [];
+      adminUserIdsByOrg[a.org_id].push(a.id);
+    }
+
     // ── 1. Process Tasks (Due Soon, Overdue, and 5-Min Repeating Snooze) ──
     const { data: activeTasks, error: taskErr } = await supabaseAdmin
       .from('tasks')
@@ -27,7 +40,7 @@ async function checkFollowUpReminders() {
       console.error('[FollowUpReminder] Task query error:', taskErr.message);
     } else if (activeTasks?.length) {
       for (const task of activeTasks) {
-        if (!task.due_date || !task.user_id) continue;
+        if (!task.due_date) continue;
 
         const taskDueDate = new Date(task.due_date);
         const isPastDue = taskDueDate.getTime() <= now.getTime();
@@ -71,15 +84,25 @@ async function checkFollowUpReminders() {
           notifContent = `Your task "${task.title}" is due in ${dueInMinutes <= 0 ? 1 : dueInMinutes} minute${dueInMinutes === 1 ? '' : 's'}. Take action now!`;
         }
 
-        await supabaseAdmin.from('notifications').insert({
-          org_id: task.org_id,
-          user_id: task.user_id,
-          type: notifType,
-          title: notifTitle,
-          content: notifContent,
-          task_id: task.id,
-          lead_id: task.lead_id || null,
-        });
+        // Target assigned user AND leadership (if overdue)
+        const targetUserIds = new Set();
+        if (task.user_id) targetUserIds.add(task.user_id);
+        if (isPastDue) {
+          const admins = adminUserIdsByOrg[task.org_id] || [];
+          for (const adminId of admins) targetUserIds.add(adminId);
+        }
+
+        for (const uid of targetUserIds) {
+          await supabaseAdmin.from('notifications').insert({
+            org_id: task.org_id,
+            user_id: uid,
+            type: notifType,
+            title: notifTitle,
+            content: notifContent,
+            task_id: task.id,
+            lead_id: task.lead_id || null,
+          });
+        }
 
         // Update notified_at timestamp on task
         await supabaseAdmin
@@ -93,7 +116,6 @@ async function checkFollowUpReminders() {
     const { data: followupLeads, error: followupErr } = await supabaseAdmin
       .from('leads')
       .select('id, org_id, assigned_to, name, next_followup_at')
-      .not('assigned_to', 'is', null)
       .not('next_followup_at', 'is', null)
       .lte('next_followup_at', in15Min.toISOString())
       .not('stage', 'in', '("Lost / Dropped","Sold / Closed Won")');
@@ -102,21 +124,10 @@ async function checkFollowUpReminders() {
       console.error('[FollowUpReminder] Lead follow-up query error:', followupErr.message);
     } else if (followupLeads?.length) {
       for (const lead of followupLeads) {
-        if (!lead.next_followup_at || !lead.assigned_to) continue;
+        if (!lead.next_followup_at) continue;
 
         const followupTime = new Date(lead.next_followup_at);
         const isPastDue = followupTime.getTime() <= now.getTime();
-
-        // Check if an unread notification for this lead was created in the last 5 minutes
-        const { count } = await supabaseAdmin
-          .from('notifications')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', lead.assigned_to)
-          .eq('lead_id', lead.id)
-          .in('type', ['task_due', 'task_overdue'])
-          .gte('created_at', ago5Min.toISOString());
-
-        if (count > 0) continue;
 
         const dueInMinutes = Math.round((followupTime.getTime() - now.getTime()) / 60000);
         const formattedTime = followupTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -135,15 +146,34 @@ async function checkFollowUpReminders() {
           notifContent = `Scheduled follow-up with "${lead.name}" is due in ${dueInMinutes <= 0 ? 1 : dueInMinutes} minute${dueInMinutes === 1 ? '' : 's'} (${formattedTime}). Get ready to connect!`;
         }
 
-        await supabaseAdmin.from('notifications').insert({
-          org_id: lead.org_id,
-          user_id: lead.assigned_to,
-          type: notifType,
-          title: notifTitle,
-          content: notifContent,
-          lead_id: lead.id,
-          task_id: null,
-        });
+        // Notify assigned executive AND active admins & super admins
+        const targetUserIds = new Set();
+        if (lead.assigned_to) targetUserIds.add(lead.assigned_to);
+        const admins = adminUserIdsByOrg[lead.org_id] || [];
+        for (const adminId of admins) targetUserIds.add(adminId);
+
+        for (const uid of targetUserIds) {
+          // Check if an unread notification for this lead was created for this user in the last 5 minutes
+          const { count } = await supabaseAdmin
+            .from('notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', uid)
+            .eq('lead_id', lead.id)
+            .in('type', ['task_due', 'task_overdue'])
+            .gte('created_at', ago5Min.toISOString());
+
+          if (count > 0) continue;
+
+          await supabaseAdmin.from('notifications').insert({
+            org_id: lead.org_id,
+            user_id: uid,
+            type: notifType,
+            title: notifTitle,
+            content: notifContent,
+            lead_id: lead.id,
+            task_id: null,
+          });
+        }
       }
     }
   } catch (err) {

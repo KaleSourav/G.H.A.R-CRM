@@ -55,8 +55,8 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'title, type, and due_date are required' });
     }
 
-    // Managers/admins can create tasks for other users; executives create for themselves
-    const assignedUserId = (['admin','manager'].includes(req.userRole) && user_id) ? user_id : req.user.id;
+    // Managers/admins/super_admins can create tasks for other users; executives create for themselves
+    const assignedUserId = (['super_admin', 'superadmin', 'admin', 'manager'].includes(req.userRole) && user_id) ? user_id : req.user.id;
 
     const { data, error } = await supabaseAdmin.from('tasks').insert({
       org_id: req.orgId, user_id: assignedUserId, lead_id: lead_id || null,

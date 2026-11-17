@@ -213,14 +213,17 @@ export async function syncUpcomingAlarmsFromLeadsAndTasks(leads = [], tasks = []
     for (const lead of leads) {
       if (lead.next_followup_at) {
         const target = new Date(lead.next_followup_at).getTime();
-        if (target > now) {
+        const isUpcoming = target > now;
+        // Schedule if upcoming OR overdue within the last 30 days
+        if (isUpcoming || (now - target) < 30 * 86400000) {
           await scheduleFollowUpAlarm({
             id: lead.id,
             leadId: lead.id,
             leadName: lead.name,
             phone: lead.phone,
             title: lead.name,
-            date: lead.next_followup_at,
+            date: isUpcoming ? lead.next_followup_at : new Date(now + 2000),
+            body: isUpcoming ? undefined : `🚨 Overdue: Scheduled follow-up with "${lead.name}" is pending! Tap to call or snooze.`,
           });
         }
       }
@@ -229,7 +232,8 @@ export async function syncUpcomingAlarmsFromLeadsAndTasks(leads = [], tasks = []
     for (const task of tasks) {
       if (!task.completed && task.due_date) {
         const target = new Date(task.due_date).getTime();
-        if (target > now) {
+        const isUpcoming = target > now;
+        if (isUpcoming || (now - target) < 30 * 86400000) {
           await scheduleFollowUpAlarm({
             id: task.id,
             taskId: task.id,
@@ -237,7 +241,8 @@ export async function syncUpcomingAlarmsFromLeadsAndTasks(leads = [], tasks = []
             leadName: task.lead?.name || task.title,
             phone: task.lead?.phone,
             title: task.title,
-            date: task.due_date,
+            date: isUpcoming ? task.due_date : new Date(now + 3000),
+            body: isUpcoming ? undefined : `🚨 Overdue Task: "${task.title}" is pending your action!`,
           });
         }
       }
